@@ -1,89 +1,38 @@
-
-coveralls.net
+dotnet-coveralls
 =============
 
-<img align="right" width="256px" height="256px" src="http://img.csmac.nz/coverallsNet-256.svg">
+Hard fork of [coveralls.net](https://github.com/csMACnz/coveralls.net) to create a simple `dotnet coveralls` publishing cli
 
-[![License](http://img.shields.io/:license-mit-blue.svg)](http://csmacnz.mit-license.org)
-[![NuGet](https://img.shields.io/nuget/v/coveralls.net.svg)](https://www.nuget.org/packages/coveralls.net)
-[![NuGet](https://img.shields.io/nuget/dt/coveralls.net.svg)](https://www.nuget.org/packages/coveralls.net)
-[![Gratipay](http://img.shields.io/gratipay/csMACnz.svg)](https://gratipay.com/csMACnz/)
-[![Badges](http://img.shields.io/:badges-17/17-ff6799.svg)](https://github.com/badges/badgerbadgerbadger)
+Usage is available via `--help` but here it is too:
 
-[![Build status](https://ci.appveyor.com/api/projects/status/m9hqgm8a38s4vke1?svg=true)](https://ci.appveyor.com/project/MarkClearwater/coveralls-net)
-[![Travis Build Status](https://img.shields.io/travis/csMACnz/coveralls.net.svg)](https://travis-ci.org/csMACnz/coveralls.net)
-
-[![Coverage Status](https://img.shields.io/coveralls/csMACnz/coveralls.net.svg)](https://coveralls.io/r/csMACnz/coveralls.net)
-[![Coverity Scan Build Status](https://scan.coverity.com/projects/3696/badge.svg)](https://scan.coverity.com/projects/3696)
-
-[![Stories in Backlog](https://badge.waffle.io/csmacnz/coveralls.net.png?label=backlog&title=Backlog)](https://waffle.io/csmacnz/coveralls.net)
-[![Stories in Ready](https://badge.waffle.io/csmacnz/coveralls.net.png?label=ready&title=Ready)](https://waffle.io/csmacnz/coveralls.net)
-[![Stories in progress](https://badge.waffle.io/csmacnz/coveralls.net.png?label=in%20progress&title=In%20Progress)](https://waffle.io/csmacnz/coveralls.net)
-[![Stories in next release](https://badge.waffle.io/csmacnz/coveralls.net.png?label=in%20next%20release&title=In%20Next%20Release)](https://waffle.io/csmacnz/coveralls.net)
-[![Issue Stats](http://www.issuestats.com/github/csMACnz/coveralls.net/badge/pr)](http://www.issuestats.com/github/csMACnz/coveralls.net)
-[![Issue Stats](http://www.issuestats.com/github/csMACnz/coveralls.net/badge/issue)](http://www.issuestats.com/github/csMACnz/coveralls.net)
-
-
-[![Source Browser](https://img.shields.io/badge/Browse-Source-green.svg)](http://sourcebrowser.io/Browse/csMACnz/coveralls.net)
-[![Open Hub](https://img.shields.io/badge/Open-Hub-0185CA.svg)](https://www.openhub.net/p/coverallsdotnet)
-[![Documentation Status](https://readthedocs.org/projects/coverallsnet/badge/?version=latest)](https://readthedocs.org/projects/coverallsnet/?badge=latest)
-
-
-
-Coveralls uploader for .Net Code coverage of your C# source code. Should work with any code files that get reported with the supported coverage tools, but the primary focus is CSharp.
-
-Install
--------
-
-This is available on nuget at https://www.nuget.org/packages/coveralls.net. To install coveralls.net you can find it by searching for `coveralls.net` in the visual studio nuget extension, or install by run this command in the Package Manager Console
-
-    PM> Install-Package coveralls.net
-
-How To Use
-----------
-
-Head over to the [wiki](https://github.com/csMACnz/coveralls.net/wiki) for user guidance on how it works.
-You can also run the following command for in-app usage guidance:
-
-    csmacnz.coveralls.exe --help
-
-Samples
--------
-
-Sample applications using Coveralls.net to publish their results can be found in the [csmacnz/Coveralls.net-Samples](https://github.com/csmacnz/Coveralls.net-Samples) Project.
-
-Supported
----------
-
-* [OpenCover](https://github.com/sawilde/opencover)
-* [Mono Code Coverage (monocov)](http://www.mono-project.com/docs/debug+profile/profile/code-coverage/)
-* [Visual Studio's Dynamic Coverage](http://msdn.microsoft.com/en-us/library/dd299398%28v=vs.90%29.aspx) (based on [ReportGenerator's support](https://reportgenerator.codeplex.com/wikipage?title=Visual%20Studio%20Coverage%20Tools),  using vstest.console.exe and CodeCoverage.exe)
-* lcov
-* [Chutzpah - A JavaScript Test Runner](https://github.com/mmanela/chutzpah)
-
-Full Supported, In Progress, and Future Support information can be found [Coverage Support](https://github.com/csMACnz/coveralls.net/wiki/Coverage-Support) wiki page
-
-Issues
-------
-
-Follow development progress, report bugs and suggest features using [github issues](https://github.com/csMACnz/coveralls.net/issues) (also available at [waffle.io](https://waffle.io/csmacnz/coveralls.net))
-
-Follow The App
---------------
-
-You can ask questions and get updates using the twitter account [coveralls.net (@coverallsdotnet)](https://twitter.com/coverallsdotnet).
-
-Contributers
-------------
-
-Mark Clearwater (Primary Owner)
-* [@csMACnz](https://twitter.com/csmacnz) on twitter
-* [csMACnz](https://github.com/csMACnz) on github
-* <csmacnz@csmac.co.nz> on email
-
-Graphs
-------
-
-Throughput of this project (thanks to [waffle.io](https://waffle.io/))
-
-[![Throughput Graph](https://graphs.waffle.io/csmacnz/coveralls.net/throughput.svg)](https://waffle.io/csmacnz/coveralls.net/metrics)
+```
+ --repo-token             The coveralls.io repository token. If not set, will get value from the COVERALLS_REPO_TOKEN
+                          environment variable.
+ --dry-run                This flag will stop coverage results being posted to coveralls.io
+ --open-cover             One ore more OpenCover xml files to include
+ --dynamic-code-coverage  One ore more CodeCoverage.exe xml files to include
+ --vs-coverage            One ore more Visual Studio Coverage xml files to include
+ --monocov                One ore more monocov results folders to include
+ --chutzpah               One ore more chutzpah json files to include
+ --lcov                   One ore more lcov files to include
+ --parallel               If using parallel builds. If sent, coveralls.io will wait for the webhook before completing
+                          the build.
+ --use-relative-paths     If set, will attempt to strip the current working directory from the beginning of the source
+                          file paths in the coverage reports.
+ --base-path              When use-relative-paths and a basePath is provided, this path is used instead of the current
+                          working directory.
+ --service-name           The name of the service generating coveralls reports.
+ --job-id                 The unique job Id to provide to coveralls.io.
+ --build-number           The build number. Will increment automatically if not specified.
+ --ignore-upload-errors   If set, will exit with code 0 on upload error.
+ --commit-id              The git commit hash for the coverage report. If omitted, will attempt to get it from git.
+ --commit-branch          The git commit branch for the coverage report. If omitted, will attempt to get it from git.
+ --commit-author          The git commit author for the coverage report. If omitted, will attempt to get it from git.
+ --commit-email           The git commit email for the coverage report. If omitted, will attempt to get it from git.
+ --commit-message         The git commit message for the coverage report. If omitted, will attempt to get it from git.
+ --pr-id                  The pull request id. Used for updating status on PRs for source control providers that support
+                          them (GitHub, BitBucket, etc.).
+ -h, --help               Display this help document.
+ -o, --output             The coverage results json will be written to this file if provided.
+ --version                Displays the version of the current executable.
+ ```

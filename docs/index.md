@@ -44,7 +44,7 @@ How To Use
 Head over to the [wiki](https://github.com/csMACnz/coveralls.net/wiki) for user guidance on how it works.
 You can also run the following command for in-app usage guidance:
 
-    csmacnz.coveralls.exe --help
+    dotnet-coveralls.exe --help
 
 Samples
 -------

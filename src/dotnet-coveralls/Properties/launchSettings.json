@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "dotnet-coveralls": {
+      "commandName": "Project",
+      "commandLineArgs": "--open-cover ..\\..\\..\\..\\..\\CoverageSamples\\opencover\\Sample1\\EmptyReport.xml --open-cover ..\\..\\..\\..\\..\\CoverageSamples\\opencover\\Sample2\\SingleFileReport.xml --dry-run --repo-token MYTESTREPOTOKEN"
+    }
+  }
+}
