@@ -1,6 +1,7 @@
 ﻿using BCLExtensions;
+using csmacnz.Coveralls.Data;
 
-namespace csmacnz.Coveralls
+namespace csmacnz.Coveralls.GitDataResolvers
 {
     public class CommandLineGitDataResolver : IGitDataResolver
     {

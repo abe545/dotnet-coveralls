@@ -50,16 +50,16 @@ namespace csmacnz.Coveralls.Tests.Integration
                 const int timeoutInMilliseconds = 10000;
                 if (!process.WaitForExit(timeoutInMilliseconds))
                 {
-                    throw new XunitException(string.Format("Test execution time exceeded: {0}ms", timeoutInMilliseconds));
+                    throw new XunitException($"Test execution time exceeded: {timeoutInMilliseconds}ms");
                 }
                 exitCode = process.ExitCode;
             }
 
             return new CoverageRunResults
             {
-                StandardOutput=results,
+                StandardOutput = results,
                 StandardError = errorsResults,
-                ExitCode=exitCode
+                ExitCode = exitCode
             };
         }
 

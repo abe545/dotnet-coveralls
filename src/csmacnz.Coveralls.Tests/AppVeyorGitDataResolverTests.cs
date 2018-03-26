@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using csmacnz.Coveralls.Data;
+using csmacnz.Coveralls.GitDataResolvers;
+using csmacnz.Coveralls.Ports;
 using Xunit;
 
 namespace csmacnz.Coveralls.Tests
@@ -60,14 +63,15 @@ namespace csmacnz.Coveralls.Tests
 
             Assert.NotNull(gitData);
         }
+
         public class GenerateData
         {
-            private readonly GitData _gitData;
-            private readonly string _expectedId;
-            private readonly string _expectedName;
-            private readonly string _expectedEmail;
-            private readonly string _expectedMessage;
             private readonly string _expectedBranch;
+            private readonly string _expectedEmail;
+            private readonly string _expectedId;
+            private readonly string _expectedMessage;
+            private readonly string _expectedName;
+            private readonly GitData _gitData;
 
             public GenerateData()
             {
@@ -134,7 +138,7 @@ namespace csmacnz.Coveralls.Tests
 
     public class TestEnvironmentVariables : IEnvironmentVariables
     {
-        private Dictionary<string, string> _variables;
+        private readonly Dictionary<string, string> _variables;
 
         public TestEnvironmentVariables(Dictionary<string, string> variables)
         {

@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace csmacnz.Coveralls
+namespace csmacnz.Coveralls.Data
 {
     public sealed class CoverallData
     {
@@ -13,8 +13,14 @@ namespace csmacnz.Coveralls
         [JsonProperty("service_name")]
         public string ServiceName { get; set; }
 
+        [JsonProperty("service_number", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string ServiceNumber { get; set; }
+
         [JsonProperty("service_pull_request", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string PullRequestId { get; set; }
+
+        [JsonProperty("parallel", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool? Parallel { get; set; }
 
         [JsonProperty("source_files")]
         public CoverageFile[] SourceFiles { get; set; }
@@ -54,7 +60,6 @@ namespace csmacnz.Coveralls
 
         [JsonProperty("message", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string Message { get; set; }
-
     }
 
     public sealed class GitRemotes

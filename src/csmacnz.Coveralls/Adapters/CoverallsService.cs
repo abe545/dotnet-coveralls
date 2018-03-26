@@ -1,9 +1,10 @@
 using System;
 using System.Net.Http;
 using Beefeater;
+using csmacnz.Coveralls.Ports;
 using Newtonsoft.Json;
 
-namespace csmacnz.Coveralls
+namespace csmacnz.Coveralls.Adapters
 {
     public class CoverallsService : ICoverallsService
     {
@@ -31,7 +32,7 @@ namespace csmacnz.Coveralls
                             message = message.Substring(0, 200);
                         }
 
-                        return string.Format("{0} - {1}", response.StatusCode, message);
+                        return $"{response.StatusCode} - {message}";
                     }
                     return true;
                 }
@@ -43,7 +44,7 @@ namespace csmacnz.Coveralls
             try
             {
                 dynamic result = JsonConvert.DeserializeObject(content);
-                return (string)result.message;
+                return (string) result.message;
             }
             catch (Exception)
             {

@@ -1,13 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using BCLExtensions;
+using csmacnz.Coveralls.Data;
 
 namespace csmacnz.Coveralls
 {
     public class CoverageFileBuilder
     {
-        private string _filePath;
         private readonly int?[] _coverage;
+        private string _filePath;
         private List<string> _sourceLines;
 
         public CoverageFileBuilder(FileCoverageData data)
@@ -38,17 +39,16 @@ namespace csmacnz.Coveralls
 
         public CoverageFile CreateFile()
         {
-            var length = _sourceLines != null ? _sourceLines.Count : _coverage.Length;
+            var length = _sourceLines?.Count ?? _coverage.Length;
             var coverage = _coverage;
             if (length > _coverage.Length)
             {
                 coverage = new int?[length];
-                _coverage.CopyTo(coverage,0);
+                _coverage.CopyTo(coverage, 0);
             }
 
-            var sourceDigest = Crypto.CalculateMD5Digest(string.Join("\n", _sourceLines != null ? _sourceLines.ToArray() : new string[0]));
+            var sourceDigest = Crypto.CalculateMD5Digest(string.Join("\n", _sourceLines?.ToArray() ?? new string[0]));
             return new CoverageFile(_filePath, sourceDigest, coverage);
         }
-
     }
 }

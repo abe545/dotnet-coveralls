@@ -4,9 +4,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Xml.Linq;
 using BCLExtensions;
 using Beefeater;
+using csmacnz.Coveralls.Adapters;
+using csmacnz.Coveralls.Data;
+using csmacnz.Coveralls.GitDataResolvers;
+using JetBrains.Annotations;
 using Newtonsoft.Json;
 
 namespace csmacnz.Coveralls
@@ -15,7 +18,58 @@ namespace csmacnz.Coveralls
     {
         public static void Main(string[] argv)
         {
-            var args = new MainArgs(argv, exit: true, version: (string)GetDisplayVersion());
+            var args = new MainArgs(argv, exit: true, version: (string) GetDisplayVersion());
+
+            var repoToken = ResolveRepoToken(args);
+
+            var outputFile = ResolveOutpuFile(args);
+
+            //Main Processing
+            var files = BuildCoverageFiles(args);
+
+            var gitData = ResolveGitData(args);
+
+            var serviceName = ResolveServiceName(args);
+            var serviceJobId = ResolveServiceJobId(args);
+            var serviceNumber = ResolveServiceNumber(args);
+            var pullRequestId = ResolvePullRequestId(args);
+            var parallel = args.IsProvided("--parallel") && args.OptParallel;
+
+            var data = new CoverallData
+            {
+                RepoToken = repoToken,
+                ServiceJobId = serviceJobId.ValueOr("0"),
+                ServiceName = serviceName.ValueOr("coveralls.net"),
+                ServiceNumber = serviceNumber.ValueOr(null),
+                PullRequestId = pullRequestId.ValueOr(null),
+                SourceFiles = files.ToArray(),
+                Parallel = parallel,
+                Git = gitData.ValueOrDefault()
+            };
+
+            var fileData = JsonConvert.SerializeObject(data);
+            if (!string.IsNullOrWhiteSpace(outputFile))
+            {
+                WriteFileData(fileData, outputFile);
+            }
+            if (!args.OptDryrun)
+            {
+                UploadCoverage(fileData, args.OptTreatuploaderrorsaswarnings);
+            }
+        }
+
+        private static string ResolveOutpuFile(MainArgs args)
+        {
+            var outputFile = args.IsProvided("--output") ? args.OptOutput : string.Empty;
+            if (!string.IsNullOrWhiteSpace(outputFile) && File.Exists(outputFile))
+            {
+                Console.WriteLine("output file '{0}' already exists and will be overwritten.", outputFile);
+            }
+            return outputFile;
+        }
+
+        private static string ResolveRepoToken(MainArgs args)
+        {
             string repoToken;
             if (args.IsProvided("--repoToken"))
             {
@@ -38,135 +92,149 @@ namespace csmacnz.Coveralls
                 {
                     ExitWithError("No token found in Environment Variable '{0}'.".FormatWith(variable));
                 }
-
             }
-            var outputFile = args.IsProvided("--output") ? args.OptOutput : string.Empty;
-            if (!string.IsNullOrWhiteSpace(outputFile) && File.Exists(outputFile))
-            {
-                Console.WriteLine("output file '{0}' already exists and will be overwritten.", outputFile);
-            }
+            return repoToken;
+        }
 
+        private static List<CoverageFile> BuildCoverageFiles(MainArgs args)
+        {
             var pathProcessor = new PathProcessor(args.IsProvided("--basePath") ? args.OptBasepath : null);
 
             List<CoverageFile> files;
-            if (args.IsProvided("--monocov") && args.OptMonocov)
+            if (args.IsProvided("--multiple") && args.OptMultiple)
             {
-                var fileName = args.OptInput;
-                if (!Directory.Exists(fileName))
+                var modes = args.OptInput.Split(';');
+                files = new List<CoverageFile>();
+                foreach (var modekeyvalue in modes)
                 {
-                    ExitWithError("Input file '" + fileName + "' cannot be found");
+                    var split = modekeyvalue.Split('=');
+                    var rawMode = split[0];
+                    var input = split[1];
+                    var mode = GetMode(rawMode);
+                    files.AddRange(LoadCoverageFiles(mode, pathProcessor, input, args.OptUserelativepaths));
                 }
-                Dictionary<string, XDocument> documents =
-                    new DirectoryInfo(fileName).GetFiles()
-                        .Where(f => f.Name.EndsWith(".xml"))
-                        .ToDictionary(f => f.Name, f => XDocument.Load(f.FullName));
-
-                files = new MonoCoverParser(pathProcessor).GenerateSourceFiles(documents, args.OptUserelativepaths);
             }
             else
             {
-                List<FileCoverageData> coverageData;
-                if (args.IsProvided("--dynamiccodecoverage") && args.OptDynamiccodecoverage)
+                var mode = GetMode(args);
+                files = LoadCoverageFiles(mode, pathProcessor, args.OptInput, args.OptUserelativepaths);
+            }
+            Debug.Assert(files != null);
+            return files;
+        }
+
+        private static void UploadCoverage(string fileData, bool treatErrorsAsWarnings)
+        {
+            var uploadResult = new CoverallsService().Upload(fileData);
+            if (!uploadResult.Successful)
+            {
+                var message = $"Failed to upload to coveralls\n{uploadResult.Error}";
+                if (treatErrorsAsWarnings)
                 {
-                    var fileName = args.OptInput;
-                    if (!File.Exists(fileName))
-                    {
-                        ExitWithError("Input file '" + fileName + "' cannot be found");
-                    }
-
-                    var document = XDocument.Load(fileName);
-
-                    coverageData = new DynamicCodeCoverageParser().GenerateSourceFiles(document);
-                }
-                else if(args.IsProvided("--exportcodecoverage") && args.OptExportcodecoverage)
-                {
-                    var fileName = args.OptInput;
-                    if (!File.Exists(fileName))
-                    {
-                        ExitWithError("Input file '" + fileName + "' cannot be found");
-                    }
-
-                    var document = XDocument.Load(fileName);
-
-                    coverageData = new ExportCodeCoverageParser().GenerateSourceFiles(document);
+                    Console.WriteLine(message);
                 }
                 else
                 {
-                    var fileName = args.OptInput;
-                    if (!File.Exists(fileName))
-                    {
-                        ExitWithError("Input file '" + fileName + "' cannot be found");
-                    }
-
-                    var document = XDocument.Load(fileName);
-
-                    coverageData = new OpenCoverParser().GenerateSourceFiles(document);
-                }
-
-                files = coverageData.Select(coverageFileData =>
-                {
-                    var coverageBuilder = new CoverageFileBuilder(coverageFileData);
-
-                    var path = coverageFileData.FullPath;
-                    if (args.OptUserelativepaths)
-                    {
-                        path = pathProcessor.ConvertPath(coverageFileData.FullPath);
-                    }
-                    path = pathProcessor.UnixifyPath(path);
-                    coverageBuilder.SetPath(path);
-
-                    var readAllText = new FileSystem().TryLoadFile(coverageFileData.FullPath);
-                    if (readAllText.HasValue)
-                    {
-                        coverageBuilder.AddSource((string)readAllText);
-                    }
-
-                    var coverageFile = coverageBuilder.CreateFile();
-                    return coverageFile;
-                }).ToList();
-            }
-
-            var gitData = ResolveGitData(args);
-
-            var serviceJobId = ResolveServiceJobId(args);
-            var pullRequestId = ResolvePullRequestId(args);
-
-            string serviceName = args.IsProvided("--serviceName") ? args.OptServicename : "coveralls.net";
-            var data = new CoverallData
-            {
-                RepoToken = repoToken,
-                ServiceJobId = serviceJobId.ValueOr("0"),
-                ServiceName = serviceName,
-                PullRequestId = pullRequestId.ValueOr(null),
-                SourceFiles = files.ToArray(),
-                Git = gitData.ValueOrDefault()
-            };
-
-            var fileData = JsonConvert.SerializeObject(data);
-            if (!string.IsNullOrWhiteSpace(outputFile))
-            {
-                WriteFileData(fileData, outputFile);
-            }
-            if (!args.OptDryrun)
-            {
-                var uploadResult = new CoverallsService().Upload(fileData);
-                if (!uploadResult.Successful)
-                {
-                    var message = string.Format("Failed to upload to coveralls\n{0}", uploadResult.Error);
-                    if (args.OptTreatuploaderrorsaswarnings)
-                    {
-                        Console.WriteLine(message);
-                    }
-                    else
-                    {
-                        ExitWithError(message);
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("Coverage data uploaded to coveralls.");
+                    ExitWithError(message);
                 }
             }
+            else
+            {
+                Console.WriteLine("Coverage data uploaded to coveralls.");
+            }
+        }
+
+        private static List<CoverageFile> LoadCoverageFiles(Option<CoverageMode> mode, PathProcessor pathProcessor,
+            string inputArgument, bool useRelativePaths)
+        {
+            List<CoverageFile> files = null;
+            if (!mode.HasValue)
+            {
+                ExitWithError("Unknown mode provided");
+            }
+            var coverageFiles = new CoverageLoader(new FileSystem()).LoadCoverageFiles((CoverageMode) mode,
+                pathProcessor, inputArgument, useRelativePaths);
+            if (coverageFiles.Successful)
+            {
+                files = coverageFiles.Value;
+            }
+            else
+            {
+                switch (coverageFiles.Error)
+                {
+                    case LoadCoverageFilesError.InputFileNotFound:
+                        ExitWithError($"Input file '{inputArgument}' cannot be found");
+                        break;
+                    case LoadCoverageFilesError.ModeNotSupported:
+                        ExitWithError($"Could not process mode {mode}");
+                        break;
+                    case LoadCoverageFilesError.UnknownFilesMissingError:
+                        ExitWithError($"Unknown Error Finding files processing mode {mode}");
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+            return files;
+        }
+
+        private static Option<CoverageMode> GetMode(string mode)
+        {
+            if (string.Equals(mode, "monocov", StringComparison.OrdinalIgnoreCase))
+            {
+                return CoverageMode.MonoCov;
+            }
+            if (string.Equals(mode, "chutzpah", StringComparison.OrdinalIgnoreCase))
+            {
+                return CoverageMode.Chutzpah;
+            }
+            if (string.Equals(mode, "dynamiccodecoverage", StringComparison.OrdinalIgnoreCase))
+            {
+                return CoverageMode.DynamicCodeCoverage;
+            }
+            if (string.Equals(mode, "exportcodecoverage", StringComparison.OrdinalIgnoreCase))
+            {
+                return CoverageMode.ExportCodeCoverage;
+            }
+            if (string.Equals(mode, "opencover", StringComparison.OrdinalIgnoreCase))
+            {
+                return CoverageMode.OpenCover;
+            }
+            if (string.Equals(mode, "lcov", StringComparison.OrdinalIgnoreCase))
+            {
+                return CoverageMode.LCov;
+            }
+            return Option<CoverageMode>.None;
+        }
+
+        private static Option<CoverageMode> GetMode(MainArgs args)
+        {
+            if (args.IsProvided("--monocov") && args.OptMonocov)
+            {
+                return CoverageMode.MonoCov;
+            }
+            if (args.IsProvided("--chutzpah") && args.OptChutzpah)
+            {
+                return CoverageMode.Chutzpah;
+            }
+            if (args.IsProvided("--dynamiccodecoverage") && args.OptDynamiccodecoverage)
+            {
+                return CoverageMode.DynamicCodeCoverage;
+            }
+            if (args.IsProvided("--exportcodecoverage") && args.OptExportcodecoverage)
+            {
+                return CoverageMode.ExportCodeCoverage;
+            }
+            if (args.IsProvided("--opencover") && args.OptOpencover)
+            {
+                return CoverageMode.OpenCover;
+            }
+            if (args.IsProvided("--lcov") && args.OptLcov)
+            {
+                return CoverageMode.LCov;
+            }
+
+            return Option<CoverageMode>.None; //Unreachable
         }
 
         private static NotNull<string> GetDisplayVersion()
@@ -174,16 +242,33 @@ namespace csmacnz.Coveralls
             return FileVersionInfo.GetVersionInfo(Assembly.GetEntryAssembly().Location).ProductVersion;
         }
 
+        [ContractAnnotation("=>halt")]
         private static void ExitWithError(string message)
         {
             Console.Error.WriteLine(message);
             Environment.Exit(1);
         }
 
+        private static Option<string> ResolveServiceName(MainArgs args)
+        {
+            if (args.IsProvided("--serviceName")) return args.OptServicename;
+            var isAppVeyor = new EnvironmentVariables().GetEnvironmentVariable("APPVEYOR");
+            if (isAppVeyor == "True") return "appveyor";
+            return null;
+        }
+
         private static Option<string> ResolveServiceJobId(MainArgs args)
         {
             if (args.IsProvided("--jobId")) return args.OptJobid;
             var jobId = new EnvironmentVariables().GetEnvironmentVariable("APPVEYOR_JOB_ID");
+            if (jobId.IsNotNullOrWhitespace()) return jobId;
+            return null;
+        }
+
+        private static Option<string> ResolveServiceNumber(MainArgs args)
+        {
+            if (args.IsProvided("--serviceNumber")) return args.OptServicenumber;
+            var jobId = new EnvironmentVariables().GetEnvironmentVariable("APPVEYOR_BUILD_NUMBER");
             if (jobId.IsNotNullOrWhitespace()) return jobId;
             return null;
         }
@@ -204,16 +289,12 @@ namespace csmacnz.Coveralls
                 new AppVeyorGitDataResolver(new EnvironmentVariables())
             };
 
-            return providers.Where(p=>p.CanProvideData()).Select(p=>p.GenerateData()).FirstOrDefault();
+            return providers.Where(p => p.CanProvideData()).Select(p => p.GenerateData()).FirstOrDefault();
         }
 
         private static void WriteFileData(string fileData, string outputFile)
         {
-            try
-            {
-                File.WriteAllText(outputFile, fileData);
-            }
-            catch (Exception)
+            if (!new FileSystem().WriteFile(outputFile, fileData))
             {
                 Console.WriteLine("Failed to write data to output file '{0}'.", outputFile);
             }
