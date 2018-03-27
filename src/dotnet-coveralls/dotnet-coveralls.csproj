@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <PackageId>dotnet-coveralls</PackageId>
+    <RootNamespace>Dotnet.Coveralls</RootNamespace>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Beefeater" Version="0.3.0" />
+    <PackageReference Include="clipr" Version="1.6.0.1" />
+    <PackageReference Include="CommandLineParser" Version="2.2.1" />
+    <PackageReference Include="docopt.net" Version="0.6.1.9" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Physical" Version="1.1.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+  </ItemGroup>
+
+</Project>

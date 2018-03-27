@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <PackageId>dotnet-coveralls.Tests</PackageId>
+    <RootNamespace>Dotnet.Coveralls.Tests</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.6.1" />
+    <PackageReference Include="Beefeater" Version="0.3.0" />
+    <PackageReference Include="System.IO.Abstractions.TestingHelpers" Version="2.1.0.178" />
+    <PackageReference Include="xunit" Version="2.3.1" />
+    <PackageReference Include="xunit.assert" Version="2.3.1" />
+    <PackageReference Include="xunit.runner.console" Version="2.3.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
+    <ProjectReference Include="..\..\src\dotnet-coveralls\dotnet-coveralls.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="EmptyReport.xml" />
+    <EmbeddedResource Include="SingleFileReport.xml" />
+    <EmbeddedResource Include="SingleFileReportOneLineCovered.xml" />
+    <EmbeddedResource Include="SingleFileReportOneLineUncovered.xml" />
+    <EmbeddedResource Include="SingleFileReportSourceFile.txt" />
+    <EmbeddedResource Include="ChutzpahExample.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
+  </ItemGroup>
+</Project>
