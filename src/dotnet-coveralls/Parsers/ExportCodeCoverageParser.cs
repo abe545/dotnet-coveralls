@@ -1,118 +1,101 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Xml.Linq;
+using Dotnet.Coveralls.CommandLine;
 using Dotnet.Coveralls.Data;
+using Dotnet.Coveralls.Io;
+using Microsoft.Extensions.FileProviders;
 
 namespace Dotnet.Coveralls.Parsers
 {
-    public class ExportCodeCoverageParser: IXmlCoverageParser
+    public class ExportCodeCoverageParser : ICoverageParser
     {
-        public List<FileCoverageData> GenerateSourceFiles(XDocument document)
+        private readonly CoverallsOptions options;
+        private readonly IFileProvider fileProvider;
+        private readonly ICoverageFileBuilder coverageFileBuilder;
+
+        public ExportCodeCoverageParser(
+            CoverallsOptions options,
+            IFileProvider fileProvider,
+            ICoverageFileBuilder coverageFileBuilder)
         {
-            var files = new List<FileCoverageData>();
-            if (document.Root != null)
+            this.options = options;
+            this.fileProvider = fileProvider;
+            this.coverageFileBuilder = coverageFileBuilder;
+        }
+
+        public async Task<IEnumerable<CoverageFile>> ParseSourceFiles()
+        {
+            return await coverageFileBuilder.Build(await options.VsCoverage.SelectMany(ParseFile));
+        
+            async Task<IEnumerable<FileCoverageData>> ParseFile(string fileName)
             {
-                var sourceFilesInfo = new Dictionary<string, string>();
+                var fileInfo = fileProvider.GetFileInfo(fileName);
+                if (!fileInfo.Exists) throw new PublishCoverallsException($"{fileName} was not found when parsing visual studio coverage");
+
+                var document = await fileInfo.ReadXml();
+                if (document.Root == null)
+                {
+                    return Enumerable.Empty<FileCoverageData>();
+                }
+                                
+                var builderBySourceId = new Dictionary<string, FileCoverageDataBuilder>();
+                var builders = new List<FileCoverageDataBuilder>();
 
                 foreach (var sourceFile in document.Root.Elements("SourceFileNames"))
                 {
                     var idElement = sourceFile.Element("SourceFileID");
-
-                    if (idElement == null)
-                    {
-                        continue;
-                    }
-
-                    var id = idElement.Value;
-
                     var fileNameElement = sourceFile.Element("SourceFileName");
-
-                    if (fileNameElement == null)
+                    if (idElement != null && fileNameElement != null)
                     {
-                        continue;
+                        var builder = new FileCoverageDataBuilder(fileNameElement.Value);
+                        builderBySourceId.Add(idElement.Value, builder);
+                        builders.Add(builder);
                     }
-
-                    var fileName = fileNameElement.Value;
-
-
-                    sourceFilesInfo.Add(id, fileName);
                 }
 
                 foreach (var module in document.Root.Elements("Module"))
                 {
-                    foreach (var sourceFileInfo in sourceFilesInfo)
+                    var namespaceTable = module.Element("NamespaceTable");
+                    if (namespaceTable == null)
                     {
-                        var fileId = sourceFileInfo.Key;
-                        var fullPath = sourceFileInfo.Value;
+                        continue;
+                    }
 
-                        var coverageBuilder = new FileCoverageDataBuilder(fullPath);
+                    foreach (var lines in namespaceTable.Elements("Class")
+                        .Elements("Method")
+                        .Elements("Lines"))
+                    {
+                        var sourceFileIdElement = lines.Element("SourceFileID");
+                        var sourceStartLineElement = lines.Element("LnStart");
+                        var sourceEndLineElement = lines.Element("LnEnd");
+                        var coveredElement = lines.Element("Coverage");
 
-                        var namespaceTable = module.Element("NamespaceTable");
-                        if (namespaceTable == null)
+                        if (sourceFileIdElement == null ||
+                            sourceStartLineElement == null ||
+                            sourceEndLineElement == null ||
+                            coveredElement == null ||
+                            !builderBySourceId.TryGetValue(sourceFileIdElement.Value, out var coverageBuilder))
                         {
                             continue;
                         }
 
-                        foreach (var @class in namespaceTable.Elements("Class"))
+                        var sourceStartLine = int.Parse(sourceStartLineElement.Value);
+                        var sourceEndLine = int.Parse(sourceEndLineElement.Value);
+
+                        // A value of 2 means completely covered
+                        var covered = coveredElement.Value == "2";
+
+                        for (var lineNumber = sourceStartLine; lineNumber <= sourceEndLine; lineNumber++)
                         {
-                            foreach (var method in @class.Elements("Method"))
-                            {
-                                foreach (var lines in method.Elements("Lines"))
-                                {
-                                    var sourceFileIdElement = lines.Element("SourceFileID");
-
-                                    if (sourceFileIdElement == null)
-                                    {
-                                        continue;
-                                    }
-
-                                    var sourceFileId = sourceFileIdElement.Value;
-
-                                    if (sourceFileId != fileId)
-                                    {
-                                        continue;
-                                    }
-
-                                    var sourceStartLineElement = lines.Element("LnStart");
-
-                                    if (sourceStartLineElement == null)
-                                    {
-                                        continue;
-                                    }
-
-                                    var sourceStartLine = int.Parse(sourceStartLineElement.Value);
-
-                                    var sourceEndLineElement = lines.Element("LnEnd");
-
-                                    if (sourceEndLineElement == null)
-                                    {
-                                        continue;
-                                    }
-
-                                    var sourceEndLine = int.Parse(sourceEndLineElement.Value);
-
-
-                                    var coveredElement = lines.Element("Coverage");
-
-                                    if (coveredElement == null)
-                                    {
-                                        continue;
-                                    }
-
-                                    // A value of 2 means completely covered
-                                    var covered = coveredElement.Value == "2";
-
-                                    for (var lineNumber = sourceStartLine; lineNumber <= sourceEndLine; lineNumber++)
-                                    {
-                                        coverageBuilder.RecordCoverage(lineNumber, covered ? 1 : 0);
-                                    }
-                                }
-                            }
+                            coverageBuilder.RecordCoverage(lineNumber, covered ? 1 : 0);
                         }
-                        files.Add(coverageBuilder.CreateFile());
                     }
                 }
+
+                return builders.Select(b => b.CreateFile());
             }
-            return files;
         }
     }
 }

@@ -1,73 +1,109 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
-using System.Xml;
-using System.Xml.Linq;
+using Dotnet.Coveralls.Data;
 using Dotnet.Coveralls.Parsers;
-using Xunit;
+using Machine.Specifications;
+using Microsoft.Extensions.FileProviders;
+using NSubstitute;
+using Shouldly;
+using SimpleInjector;
 
 namespace Dotnet.Coveralls.Tests
 {
+    [Subject(typeof(OpenCoverParser))]
+    public class when_report_is_empty : WhenReportExists
+    {
+        Establish context = () => FileInfo.CreateReadStream().Returns(_ => OpenEmbeddedResource("EmptyReport.xml"));
+
+        It should_return_no_reports = () => ParsedFiles.ShouldBeEmpty();
+    }
+
+    [Subject(typeof(OpenCoverParser))]
+    public class when_report_is_for_a_single_file : WhenReportExists
+    {
+        Establish context = () => FileInfo.CreateReadStream().Returns(_ => OpenEmbeddedResource("SingleFileReport.xml"));
+
+        It should_return_one_report = () => ParsedFiles.ShouldHaveSingleItem();
+        It should_have_the_filename = () => ParsedFiles.ShouldHaveSingleItem().Name.ShouldEndWith("Class1.cs");
+        It should_have_the_coverage_info = () => ParsedFiles.ShouldHaveSingleItem().Coverage.ShouldBe(new int?[] { null, null, null, null, 1 });
+    }
+
+    [Subject(typeof(OpenCoverParser))]
+    public class when_report_is_for_a_single_file_with_one_line_covered : WhenReportExists
+    {
+        Establish context = () => FileInfo.CreateReadStream().Returns(_ => OpenEmbeddedResource("SingleFileReportOneLineCovered.xml"));
+
+        It should_return_one_report = () => ParsedFiles.ShouldHaveSingleItem();
+        It should_have_the_filename = () => ParsedFiles.ShouldHaveSingleItem().Name.ShouldEndWith("Class1.cs");
+        It should_have_the_coverage_info = () => ParsedFiles.ShouldHaveSingleItem().Coverage.ShouldBe(new int?[] { null, null, null, null, null, null, null, 1, 1, 1 });
+    }
+
+    [Subject(typeof(OpenCoverParser))]
+    public class when_report_is_for_a_single_file_with_no_lines_covered : WhenReportExists
+    {
+        Establish context = () => FileInfo.CreateReadStream().Returns(_ => OpenEmbeddedResource("SingleFileReportOneLineUncovered.xml"));
+
+        It should_return_one_report = () => ParsedFiles.ShouldHaveSingleItem();
+        It should_have_the_filename = () => ParsedFiles.ShouldHaveSingleItem().Name.ShouldEndWith("Class1.cs");
+        It should_have_the_coverage_info = () => ParsedFiles.ShouldHaveSingleItem().Coverage.ShouldBe(new int?[] { null, null, null, null, null, null, null, 0, 0, 0 });
+    }
+
+    [Subject(typeof(OpenCoverParser))]
+    public class when_file_does_not_exist : OpenCoverParserTests
+    {
+        It should_throw_exception = () => Exception.ShouldNotBeNull();
+        It should_have_a_useful_error = () => Exception.Message.ShouldBe($"{CoverageFile} was not found when parsing open cover report");
+    }
+
+    public class WhenReportExists : OpenCoverParserTests
+    {
+        Establish context = () => FileInfo.Exists.Returns(true);
+    }
+
     public class OpenCoverParserTests
     {
-        [Fact]
-        public void EmptyReportLoadsNoSourceFiles()
+        protected const string CoverageFile = "SomeDirectory/SomeFile.xml";
+        protected static IFileInfo FileInfo;
+        protected static Scope DiScope;
+        protected static IEnumerable<CoverageFile> ParsedFiles;
+        protected static Exception Exception;
+        protected static OpenCoverParser Subject;
+
+        Establish context = () =>
         {
-            var document = LoadDocumentFromResource("Dotnet.Coveralls.Tests.EmptyReport.xml");
+            FileInfo = Substitute.For<IFileInfo>();
+            DiScope = Di.Setup(new[] { "--open-cover", CoverageFile });
 
-            var results = CreateOpenCoverParser().GenerateSourceFiles(document);
+            var fileProvider = Substitute.For<IFileProvider>();
+            fileProvider.GetFileInfo(CoverageFile).Returns(FileInfo);
 
-            Assert.Empty(results);
-        }
+            DiScope.Container.Options.AllowOverridingRegistrations = true;
+            DiScope.Container.Register(() => fileProvider);
 
-        [Fact]
-        public void SingleFileReportLoadsSingleSourceFiles()
+            Subject = DiScope.Container.GetInstance<OpenCoverParser>();
+        };
+
+        Cleanup after = () => DiScope.Container.Dispose();
+
+        Because of = () =>
         {
-            var document = LoadDocumentFromResource("Dotnet.Coveralls.Tests.SingleFileReport.xml");
-
-            var results = CreateOpenCoverParser().GenerateSourceFiles(document);
-
-            Assert.Single(results);
-        }
-
-        [Fact]
-        public void SingleFileReportWithSingleMethodLineCoveredWithoutSourceLoadsCorrectly()
-        {
-            var document = LoadDocumentFromResource("Dotnet.Coveralls.Tests.SingleFileReportOneLineCovered.xml");
-
-            var results = CreateOpenCoverParser().GenerateSourceFiles(document);
-
-            Assert.Equal(1, results[0].Coverage[8]);
-        }
-
-        [Fact]
-        public void SingleFileReportWithSingleMethodLineUncoveredWithoutSourceLoadsCorrectly()
-        {
-            var document = LoadDocumentFromResource("Dotnet.Coveralls.Tests.SingleFileReportOneLineUncovered.xml");
-
-            var results = CreateOpenCoverParser().GenerateSourceFiles(document);
-
-            Assert.Equal(0, results[0].Coverage[8]);
-        }
-
-        private OpenCoverParser CreateOpenCoverParser()
-        {
-            return new OpenCoverParser();
-        }
-
-        private static XDocument LoadDocumentFromResource(string embeddedResource)
-        {
-            XDocument document;
-            var executingAssembly = Assembly.GetExecutingAssembly();
-            using (var stream = executingAssembly.GetManifestResourceStream(embeddedResource))
+            try
             {
-                Assert.NotNull(stream);
-                Debug.Assert(stream != null, "stream != null");
-                using (var reader = XmlReader.Create(stream))
-                {
-                    document = XDocument.Load(reader);
-                }
+                ParsedFiles = Subject.ParseSourceFiles().Result;
             }
-            return document;
-        }
+            catch (AggregateException ae)
+            {
+                Exception = ae.Flatten().InnerException;
+            }
+            catch (Exception ex)
+            {
+                Exception = ex;
+            }
+        };
+
+        protected static Stream OpenEmbeddedResource(string embeddedResource) =>
+            Assembly.GetExecutingAssembly().GetManifestResourceStream($"Dotnet.Coveralls.Tests.{embeddedResource}");
     }
 }

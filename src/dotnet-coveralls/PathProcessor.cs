@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using BCLExtensions;
+using Dotnet.Coveralls.CommandLine;
 
 namespace Dotnet.Coveralls
 {
@@ -8,9 +9,9 @@ namespace Dotnet.Coveralls
     {
         private readonly string _basePath;
 
-        public PathProcessor(string basePath)
+        public PathProcessor(CoverallsOptions options)
         {
-            _basePath = basePath.IsNotNullOrWhitespace() ? basePath : Directory.GetCurrentDirectory();
+            _basePath = options.BasePath.IsNotNullOrWhitespace() ? options.BasePath : Directory.GetCurrentDirectory();
         }
 
         public string ConvertPath(string path)

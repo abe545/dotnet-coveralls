@@ -9,7 +9,9 @@ using Dotnet.Coveralls.CommandLine;
 using Dotnet.Coveralls.Data;
 using Dotnet.Coveralls.GitDataResolvers;
 using Dotnet.Coveralls.Io;
+using Dotnet.Coveralls.Parsers;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -17,30 +19,40 @@ namespace Dotnet.Coveralls.Publishers
 {
     public class CoverallsPublisher
     {
+        private readonly CoverallsOptions options;
+        private readonly IEnumerable<ICoverageParser> coverageParsers;
         private readonly IFileWriter fileWriter;
         private readonly IFileProvider fileProvider;
+        private readonly ILogger<CoverallsPublisher> logger;
 
-        public CoverallsPublisher(IFileWriter fileWriter, IFileProvider fileProvider)
+        public CoverallsPublisher(
+            CoverallsOptions options,
+            IEnumerable<ICoverageParser> coverageParsers,
+            IFileWriter fileWriter, 
+            IFileProvider fileProvider,
+            ILoggerFactory loggerFactory)
         {
+            this.options = options;
+            this.coverageParsers = coverageParsers;
             this.fileWriter = fileWriter;
             this.fileProvider = fileProvider;
+            this.logger = loggerFactory.CreateLogger<CoverallsPublisher>();
         }
 
-        public async Task<int> Publish(CoverallsOptions args)
+        public async Task<int> Publish()
         {
-            var repoToken = ResolveRepoToken(args);
-            var outputFile = ResolveOutpuFile(args);
+            var repoToken = ResolveRepoToken();
+            var outputFile = ResolveOutpuFile();
 
-            //Main Processing
-            var files = await BuildCoverageFiles(args);
+            var files = await ParseCoverageFiles();
 
-            var gitData = ResolveGitData(args);
+            var gitData = ResolveGitData();
 
-            var serviceName = ResolveServiceName(args);
-            var serviceJobId = ResolveServiceJobId(args);
-            var serviceNumber = ResolveServiceNumber(args);
-            var pullRequestId = ResolvePullRequestId(args);
-            var parallel = args.Parallel;
+            var serviceName = ResolveServiceName();
+            var serviceJobId = ResolveServiceJobId();
+            var serviceNumber = ResolveServiceNumber();
+            var pullRequestId = ResolvePullRequestId();
+            var parallel = options.Parallel;
 
             var data = new CoverallData
             {
@@ -60,30 +72,30 @@ namespace Dotnet.Coveralls.Publishers
             {
                 await WriteFileData(fileData, outputFile);
             }
-            if (!args.DryRun)
+            if (!options.DryRun)
             {
-                await UploadCoverage(fileData, args.IgnoreUploadErrors);
+                await UploadCoverage(fileData, options.IgnoreUploadErrors);
             }
 
             return 0;
         }
 
-        private string ResolveOutpuFile(CoverallsOptions args)
+        private string ResolveOutpuFile()
         {
-            var outputFile = args.Output;
+            var outputFile = options.Output;
             if (!string.IsNullOrWhiteSpace(outputFile) && fileProvider.GetFileInfo(outputFile).Exists)
             {
-                Console.WriteLine("output file '{0}' already exists and will be overwritten.", outputFile);
+                logger.LogWarning($"output file '{outputFile}' already exists and will be overwritten.");
             }
             return outputFile;
         }
 
-        private  string ResolveRepoToken(CoverallsOptions args)
+        private  string ResolveRepoToken()
         {
             string repoToken;
-            if (args.RepoToken.IsNotNullOrWhitespace())
+            if (options.RepoToken.IsNotNullOrWhitespace())
             {
-                repoToken = args.RepoToken;
+                repoToken = options.RepoToken;
             }
             else
             {
@@ -96,33 +108,6 @@ namespace Dotnet.Coveralls.Publishers
             return repoToken;
         }
 
-        private async Task<CoverageFile[]> BuildCoverageFiles(CoverallsOptions args)
-        {
-            var pathProcessor = new PathProcessor(args.BasePath);
-
-            return
-                (await Load(args.Chutzpah, CoverageMode.Chutzpah)).Concat(
-                (await Load(args.DynamicCodeCoverage, CoverageMode.DynamicCodeCoverage))).Concat(
-                (await Load(args.VsCoverage, CoverageMode.ExportCodeCoverage))).Concat(
-                (await Load(args.Lcov, CoverageMode.LCov))).Concat(
-                (await Load(args.MonoCov, CoverageMode.MonoCov))).Concat(
-                (await Load(args.OpenCover, CoverageMode.OpenCover)))
-                .ToArray();
-
-            async Task<IEnumerable<CoverageFile>> Load(IEnumerable<string> toAdd, CoverageMode mode)
-            {
-                if (!(toAdd?.Any() ?? false)) return Enumerable.Empty<CoverageFile>();
-
-                var result = new List<CoverageFile>();
-                foreach (var f in toAdd)
-                {
-                    result.AddRange(await LoadCoverageFiles(mode, pathProcessor, f, args.UseRelativePaths));
-                }
-
-                return result;
-            }
-        }
-
         private  async Task UploadCoverage(string fileData, bool treatErrorsAsWarnings)
         {
             var uploadResult = await Upload();
@@ -131,7 +116,7 @@ namespace Dotnet.Coveralls.Publishers
                 var message = $"Failed to upload to coveralls\n{uploadResult.Error}";
                 if (treatErrorsAsWarnings)
                 {
-                    await Console.Out.WriteLineAsync(message);
+                    logger.LogWarning(message);
                 }
                 else
                 {
@@ -140,7 +125,7 @@ namespace Dotnet.Coveralls.Publishers
             }
             else
             {
-                await Console.Out.WriteLineAsync("Coverage data uploaded to coveralls.");
+                logger.LogInformation("Coverage data uploaded to coveralls.");
             }
 
             async Task<(bool Success, string Error)> Upload()
@@ -170,79 +155,48 @@ namespace Dotnet.Coveralls.Publishers
             }
         }
 
-        private async Task<List<CoverageFile>> LoadCoverageFiles(
-            CoverageMode mode,
-            PathProcessor pathProcessor,
-            string inputArgument,
-            bool useRelativePaths)
-        {
-            var coverageFiles = await new CoverageLoader()
-                .LoadCoverageFiles(mode, fileProvider, pathProcessor, inputArgument, useRelativePaths);
-
-            if (coverageFiles.Successful)
-            {
-                return coverageFiles.Value;
-            }
-            else
-            {
-                switch (coverageFiles.Error)
-                {
-                    case LoadCoverageFilesError.InputFileNotFound:
-                        ExitWithError($"Input file '{inputArgument}' cannot be found");
-                        break;
-                    case LoadCoverageFilesError.ModeNotSupported:
-                        ExitWithError($"Could not process mode {mode}");
-                        break;
-                    case LoadCoverageFilesError.UnknownFilesMissingError:
-                        ExitWithError($"Unknown Error Finding files processing mode {mode}");
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-            }
-
-            return null;
-        }
+        private async Task<CoverageFile[]> ParseCoverageFiles() =>
+            (await coverageParsers.SelectMany(p => p.ParseSourceFiles())).ToArray();
 
         private void ExitWithError(string message) => throw new PublishCoverallsException(message);
 
-        private string ResolveServiceName(CoverallsOptions args)
+        private string ResolveServiceName()
         {
-            if (args.ServiceName.IsNotNullOrWhitespace()) return args.ServiceName;
+            if (options.ServiceName.IsNotNullOrWhitespace()) return options.ServiceName;
             var isAppVeyor = new EnvironmentVariables().GetEnvironmentVariable("APPVEYOR");
             if (isAppVeyor == "True") return "appveyor";
             return "dotnet-coveralls";
         }
 
-        private string ResolveServiceJobId(CoverallsOptions args)
+        private string ResolveServiceJobId()
         {
-            if (args.JobId.IsNotNullOrWhitespace()) return args.JobId;
+            if (options.JobId.IsNotNullOrWhitespace()) return options.JobId;
             var jobId = new EnvironmentVariables().GetEnvironmentVariable("APPVEYOR_JOB_ID");
             if (jobId.IsNotNullOrWhitespace()) return jobId;
             return null;
         }
 
-        private string ResolveServiceNumber(CoverallsOptions args)
+        private string ResolveServiceNumber()
         {
-            if (args.BuildNumber.IsNotNullOrWhitespace()) return args.BuildNumber;
+            if (options.BuildNumber.IsNotNullOrWhitespace()) return options.BuildNumber;
             var jobId = new EnvironmentVariables().GetEnvironmentVariable("APPVEYOR_BUILD_NUMBER");
             if (jobId.IsNotNullOrWhitespace()) return jobId;
             return null;
         }
 
-        private string ResolvePullRequestId(CoverallsOptions args)
+        private string ResolvePullRequestId()
         {
-            if (args.PullRequestId.IsNotNullOrWhitespace()) return args.PullRequestId;
+            if (options.PullRequestId.IsNotNullOrWhitespace()) return options.PullRequestId;
             var prId = new EnvironmentVariables().GetEnvironmentVariable("APPVEYOR_PULL_REQUEST_NUMBER");
             if (prId.IsNotNullOrWhitespace()) return prId;
             return null;
         }
 
-        private GitData ResolveGitData(CoverallsOptions args)
+        private GitData ResolveGitData()
         {
             var providers = new List<IGitDataResolver>
             {
-                new CommandLineGitDataResolver(args),
+                new CommandLineGitDataResolver(options),
                 new AppVeyorGitDataResolver(new EnvironmentVariables())
             };
 
@@ -280,8 +234,8 @@ namespace Dotnet.Coveralls.Publishers
             }
             catch (Exception ex)
             {
-                await Console.Error.WriteLineAsync($"Failed to write data to output file '{outputFile}'.");
-                await Console.Error.WriteLineAsync(ex.ToString());
+                logger.LogError($"Failed to write data to output file '{outputFile}'.");
+                logger.LogError(ex.ToString());
             }
         }
 
