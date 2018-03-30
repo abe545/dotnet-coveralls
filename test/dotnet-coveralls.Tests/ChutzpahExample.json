@@ -39,7 +39,7 @@
     "CoveragePercentage": 1
   },
   "D:\\path\\to\\file\\file2.ts": {
-    "FilePath": "D: \\path\\to\\file\\file2.ts",
+    "FilePath": "D:\\path\\to\\file\\file2.ts",
     "LineExecutionCounts": [
       null,
       36,

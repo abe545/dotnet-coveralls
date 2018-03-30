@@ -7,18 +7,19 @@ namespace Dotnet.Coveralls
 {
     public class PathProcessor
     {
-        private readonly string _basePath;
+        private CoverallsOptions options;
+        private string BasePath => options.BasePath.IsNotNullOrWhitespace() ? options.BasePath : Directory.GetCurrentDirectory();
 
         public PathProcessor(CoverallsOptions options)
         {
-            _basePath = options.BasePath.IsNotNullOrWhitespace() ? options.BasePath : Directory.GetCurrentDirectory();
+            this.options = options;
         }
 
         public string ConvertPath(string path)
         {
-            if (path.StartsWith(_basePath, StringComparison.InvariantCultureIgnoreCase))
+            if (options.UseRelativePaths && path.StartsWith(BasePath, StringComparison.InvariantCultureIgnoreCase))
             {
-                return path.Substring(_basePath.Length);
+                return path.Substring(BasePath.Length);
             }
 
             return path;

@@ -1,53 +1,61 @@
-﻿//using System.Diagnostics;
-//using System.IO;
-//using System.Linq;
-//using System.Reflection;
-//using Dotnet.Coveralls.Parsers;
-//using Xunit;
+﻿using System.Linq;
+using Dotnet.Coveralls.CommandLine;
+using Dotnet.Coveralls.Parsers;
+using Machine.Specifications;
+using NSubstitute;
+using Shouldly;
 
-//namespace Dotnet.Coveralls.Tests
-//{
-//    public class ChutzpahJsonParserTests
-//    {
-//        [Fact]
-//        public void GenerateSourceFiles_NonRelativePath()
-//        {
-//            var fileContents = LoadFromResource("Dotnet.Coveralls.Tests.ChutzpahExample.json");
+namespace Dotnet.Coveralls.Tests.Chutzpah
+{
+    [Subject(typeof(ChutzpahJsonParser))]
+    public class when_paths_are_not_relative : when_chutzpah_file_exists
+    {
+        It should_not_throw_exception = () => Exception.ShouldBeNull();
+        It should_have_multiple_results = () => ParsedFiles.Count().ShouldBe(2);
+        It should_parse_the_first_files_name = () => ParsedFiles.First().Name.ShouldBe("D/path/to/file/file.ts");
+        It should_parse_the_second_files_name = () => ParsedFiles.Last().Name.ShouldBe("D/path/to/file/file2.ts");
+        It should_parse_the_first_files_coverage = () => ParsedFiles.First().Coverage.ShouldBe(new int?[] { 36, 18, null, null, 9, 10, null, null, null, null, null, null, 18, 18, null });
+        It should_parse_the_second_files_coverage = () => ParsedFiles.Last().Coverage.ShouldBe(new int?[] { 36, 18, null, null, 9, 10, null, null, null, null, null, null, 18, 18, null });
+    }
 
-//            var results = CreateChutzpahParser().GenerateSourceFiles(fileContents, false);
+    [Subject(typeof(ChutzpahJsonParser))]
+    public class when_paths_are_relative : when_chutzpah_file_exists
+    {
+        Establish cotext = () =>
+        {
+            var options = DiScope.Container.GetInstance<CoverallsOptions>();
+            options.UseRelativePaths = true;
+            options.BasePath = @"D:\path\to";
+        };
 
-//            Assert.Equal(2, results.Count);
-//            Assert.Equal("D/path/to/file/file.ts", results.First().Name);
-//            Assert.Equal(36, results.First().Coverage[0]);
-//            Assert.Equal(10, results.Last().Coverage[5]);
-//            Assert.Null(results.First().Coverage[7]);
-//        }
+        It should_not_throw_exception = () => Exception.ShouldBeNull();
+        It should_have_multiple_results = () => ParsedFiles.Count().ShouldBe(2);
+        It should_parse_the_first_files_name = () => ParsedFiles.First().Name.ShouldBe("/file/file.ts");
+        It should_parse_the_second_files_name = () => ParsedFiles.Last().Name.ShouldBe("/file/file2.ts");
+        It should_parse_the_first_files_coverage = () => ParsedFiles.First().Coverage.ShouldBe(new int?[] { 36, 18, null, null, 9, 10, null, null, null, null, null, null, 18, 18, null });
+        It should_parse_the_second_files_coverage = () => ParsedFiles.Last().Coverage.ShouldBe(new int?[] { 36, 18, null, null, 9, 10, null, null, null, null, null, null, 18, 18, null });
+    }
 
-//        [Fact]
-//        public void GenerateSourceFiles_RelativePath()
-//        {
-//            var fileContents = LoadFromResource("Dotnet.Coveralls.Tests.ChutzpahExample.json");
+    [Subject(typeof(ChutzpahJsonParser))]
+    public class when_chutzpah_file_does_not_exist : ChutzpahParserTests
+    {
+        It should_throw_exception = () => Exception.ShouldNotBeNull();
+        It should_have_a_useful_error = () => Exception.Message.ShouldBe($"{CoverageFile} was not found when parsing chutzpah coverage");
+    }
 
-//            var basePath = @"D:\path\to";
-//            var results = CreateChutzpahParser(basePath).GenerateSourceFiles(fileContents, true);
+    public class when_chutzpah_file_exists : ChutzpahParserTests
+    {
+        Establish context = () =>
+        {
+            FileInfo.Exists.Returns(true);
+            FileInfo.CreateReadStream().Returns(_ => OpenEmbeddedResource("ChutzpahExample.json"));
+        };
+    }
 
-//            Assert.Equal(2, results.Count);
-//            Assert.Equal("/file/file.ts", results.First().Name);
-//            Assert.Equal(36, results.First().Coverage[0]);
-//            Assert.Equal(10, results.First().Coverage[5]);
-//            Assert.Null(results.First().Coverage[7]);
-//        }
+    public class ChutzpahParserTests : ParserSpec<ChutzpahJsonParser>
+    {
+        protected const string CoverageFile = "SomeDirectory/SomeFile.json";
 
-//        private ChutzpahJsonParser CreateChutzpahParser(string basePath = null) => new ChutzpahJsonParser(new PathProcessor(basePath));
-
-//        private string LoadFromResource(string embeddedResource)
-//        {
-//            var executingAssembly = GetType().GetTypeInfo().Assembly;
-//            using (var stream = executingAssembly.GetManifestResourceStream(embeddedResource))
-//            using (var reader = new StreamReader(stream))
-//            {
-//                return reader.ReadToEnd();
-//            }
-//        }
-//    }
-//}
+        Establish context = () => Setup(new[] { "--chutzpah", CoverageFile }, CoverageFile);
+    }
+}
