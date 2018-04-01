@@ -1,7 +1,7 @@
 using Dotnet.Coveralls.Data;
-using Dotnet.Coveralls.Ports;
+using Dotnet.Coveralls.Adapters;
 
-namespace Dotnet.Coveralls.GitDataResolvers
+namespace Dotnet.Coveralls.Git
 {
     public class AppVeyorGitDataResolver : IGitDataResolver
     {

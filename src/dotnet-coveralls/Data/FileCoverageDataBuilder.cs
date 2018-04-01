@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Dotnet.Coveralls.Data;
 
-namespace Dotnet.Coveralls
+namespace Dotnet.Coveralls.Data
 {
     public class FileCoverageDataBuilder
     {

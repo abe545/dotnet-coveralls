@@ -1,4 +1,4 @@
-﻿namespace Dotnet.Coveralls.Ports
+﻿namespace Dotnet.Coveralls.Adapters
 {
     public interface IEnvironmentVariables
     {

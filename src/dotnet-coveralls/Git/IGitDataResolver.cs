@@ -1,6 +1,6 @@
 ﻿using Dotnet.Coveralls.Data;
 
-namespace Dotnet.Coveralls.GitDataResolvers
+namespace Dotnet.Coveralls.Git
 {
     public interface IGitDataResolver
     {

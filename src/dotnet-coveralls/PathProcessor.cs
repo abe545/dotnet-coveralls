@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using BCLExtensions;
 using Dotnet.Coveralls.CommandLine;
 
 namespace Dotnet.Coveralls
@@ -8,7 +7,7 @@ namespace Dotnet.Coveralls
     public class PathProcessor
     {
         private CoverallsOptions options;
-        private string BasePath => options.BasePath.IsNotNullOrWhitespace() ? options.BasePath : Directory.GetCurrentDirectory();
+        private string BasePath => string.IsNullOrWhiteSpace(options.BasePath) ? Directory.GetCurrentDirectory() : options.BasePath;
 
         public PathProcessor(CoverallsOptions options)
         {

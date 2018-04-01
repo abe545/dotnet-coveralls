@@ -1,8 +1,7 @@
-﻿using BCLExtensions;
-using Dotnet.Coveralls.CommandLine;
+﻿using Dotnet.Coveralls.CommandLine;
 using Dotnet.Coveralls.Data;
 
-namespace Dotnet.Coveralls.GitDataResolvers
+namespace Dotnet.Coveralls.Git
 {
     public class CommandLineGitDataResolver : IGitDataResolver
     {
@@ -13,7 +12,7 @@ namespace Dotnet.Coveralls.GitDataResolvers
             this.coverallsOptions = coverallsOptions;
         }
 
-        public bool CanProvideData => coverallsOptions.CommitId.IsNotNullOrWhitespace();
+        public bool CanProvideData => !string.IsNullOrWhiteSpace(coverallsOptions.CommitId);
 
         public GitData GitData =>
             new GitData

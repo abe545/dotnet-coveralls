@@ -3,9 +3,8 @@
 //using Dotnet.Coveralls.Data;
 //using Dotnet.Coveralls.GitDataResolvers;
 //using Dotnet.Coveralls.Ports;
-//using Xunit;
 
-//namespace Dotnet.Coveralls.Tests
+//namespace Dotnet.Coveralls.TestsGitDataResolvers.AppVeyorGitDataResolver
 //{
 //    public class AppVeyorGitDataResolverTests
 //    {

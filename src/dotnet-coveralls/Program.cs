@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using clipr.Core;
-using Dotnet.Coveralls.Publishers;
 
 namespace Dotnet.Coveralls
 {

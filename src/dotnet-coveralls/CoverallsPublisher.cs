@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using BCLExtensions;
 using Dotnet.Coveralls.Adapters;
 using Dotnet.Coveralls.CommandLine;
 using Dotnet.Coveralls.Data;
-using Dotnet.Coveralls.GitDataResolvers;
+using Dotnet.Coveralls.Git;
 using Dotnet.Coveralls.Io;
 using Dotnet.Coveralls.Parsers;
 using Microsoft.Extensions.FileProviders;
@@ -15,25 +14,28 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace Dotnet.Coveralls.Publishers
+namespace Dotnet.Coveralls
 {
     public class CoverallsPublisher
     {
         private readonly CoverallsOptions options;
-        private readonly IEnumerable<ICoverageParser> coverageParsers;
-        private readonly IFileWriter fileWriter;
+        private readonly ICoverageProvider coverageProvider;
+        private readonly IGitDataProvider gitDataProvider;
+        private readonly IOutputFileWriter fileWriter;
         private readonly IFileProvider fileProvider;
         private readonly ILogger<CoverallsPublisher> logger;
 
         public CoverallsPublisher(
             CoverallsOptions options,
-            IEnumerable<ICoverageParser> coverageParsers,
-            IFileWriter fileWriter, 
+            ICoverageProvider coverageProvider,
+            IGitDataProvider gitDataProvider,
+            IOutputFileWriter fileWriter, 
             IFileProvider fileProvider,
             ILoggerFactory loggerFactory)
         {
             this.options = options;
-            this.coverageParsers = coverageParsers;
+            this.coverageProvider = coverageProvider;
+            this.gitDataProvider = gitDataProvider;
             this.fileWriter = fileWriter;
             this.fileProvider = fileProvider;
             this.logger = loggerFactory.CreateLogger<CoverallsPublisher>();
@@ -41,11 +43,8 @@ namespace Dotnet.Coveralls.Publishers
 
         public async Task<int> Publish()
         {
-            var outputFile = ResolveOutpuFile();
-
-            var files = await ParseCoverageFiles();
-
-            var gitData = ResolveGitData();
+            var files = await coverageProvider.ProvideCoverageFiles();
+            var gitData = gitDataProvider.ProvideGitData();
 
             var serviceName = ResolveServiceName();
             var serviceJobId = ResolveServiceJobId();
@@ -65,14 +64,12 @@ namespace Dotnet.Coveralls.Publishers
             };
 
             var contractResolver = new DefaultContractResolver { NamingStrategy = new SnakeCaseNamingStrategy() };
-            if (!string.IsNullOrWhiteSpace(outputFile))
-            {
-                await WriteFileData(SerializeCoverallsData(), outputFile);
-            }
+            await fileWriter.WriteCoverageOutput(SerializeCoverallsData());
+
             if (!options.DryRun)
             {
                 data.RepoToken = ResolveRepoToken();
-                await UploadCoverage(SerializeCoverallsData(), options.IgnoreUploadErrors);
+                await UploadCoverage(SerializeCoverallsData());
             }
 
             return 0;
@@ -82,27 +79,17 @@ namespace Dotnet.Coveralls.Publishers
                 new JsonSerializerSettings { ContractResolver = contractResolver, DefaultValueHandling = DefaultValueHandling.Ignore });
         }
 
-        private string ResolveOutpuFile()
-        {
-            var outputFile = options.Output;
-            if (!string.IsNullOrWhiteSpace(outputFile) && fileProvider.GetFileInfo(outputFile).Exists)
-            {
-                logger.LogWarning($"output file '{outputFile}' already exists and will be overwritten.");
-            }
-            return outputFile;
-        }
-
         private  string ResolveRepoToken()
         {
             string repoToken;
-            if (options.RepoToken.IsNotNullOrWhitespace())
+            if (!string.IsNullOrWhiteSpace(options.RepoToken))
             {
                 repoToken = options.RepoToken;
             }
             else
             {
                 repoToken = Environment.GetEnvironmentVariable("COVERALLS_REPO_TOKEN");
-                if (repoToken.IsNullOrWhitespace())
+                if (string.IsNullOrWhiteSpace(repoToken))
                 {
                     ExitWithError("No token found in Environment Variable 'COVERALLS_REPO_TOKEN'.");
                 }
@@ -110,13 +97,13 @@ namespace Dotnet.Coveralls.Publishers
             return repoToken;
         }
 
-        private  async Task UploadCoverage(string fileData, bool treatErrorsAsWarnings)
+        private  async Task UploadCoverage(string fileData)
         {
             var uploadResult = await Upload();
             if (!uploadResult.Success)
             {
-                var message = $"Failed to upload to coveralls\n{uploadResult.Error}";
-                if (treatErrorsAsWarnings)
+                var message = $"Failed to upload to coveralls:{Environment.NewLine}{uploadResult.Error}";
+                if (options.IgnoreUploadErrors)
                 {
                     logger.LogWarning(message);
                 }
@@ -157,14 +144,11 @@ namespace Dotnet.Coveralls.Publishers
             }
         }
 
-        private async Task<CoverageFile[]> ParseCoverageFiles() =>
-            (await coverageParsers.SelectMany(p => p.ParseSourceFiles())).ToArray();
-
         private void ExitWithError(string message) => throw new PublishCoverallsException(message);
 
         private string ResolveServiceName()
         {
-            if (options.ServiceName.IsNotNullOrWhitespace()) return options.ServiceName;
+            if (!string.IsNullOrWhiteSpace(options.ServiceName)) return options.ServiceName;
             var isAppVeyor = new EnvironmentVariables().GetEnvironmentVariable("APPVEYOR");
             if (isAppVeyor == "True") return "appveyor";
             return "dotnet-coveralls";
@@ -172,73 +156,26 @@ namespace Dotnet.Coveralls.Publishers
 
         private string ResolveServiceJobId()
         {
-            if (options.JobId.IsNotNullOrWhitespace()) return options.JobId;
+            if (!string.IsNullOrWhiteSpace(options.JobId)) return options.JobId;
             var jobId = new EnvironmentVariables().GetEnvironmentVariable("APPVEYOR_JOB_ID");
-            if (jobId.IsNotNullOrWhitespace()) return jobId;
+            if (!string.IsNullOrWhiteSpace(jobId)) return jobId;
             return null;
         }
 
         private string ResolveServiceNumber()
         {
-            if (options.BuildNumber.IsNotNullOrWhitespace()) return options.BuildNumber;
+            if (!string.IsNullOrWhiteSpace(options.BuildNumber)) return options.BuildNumber;
             var jobId = new EnvironmentVariables().GetEnvironmentVariable("APPVEYOR_BUILD_NUMBER");
-            if (jobId.IsNotNullOrWhitespace()) return jobId;
+            if (!string.IsNullOrWhiteSpace(jobId)) return jobId;
             return null;
         }
 
         private string ResolvePullRequestId()
         {
-            if (options.PullRequestId.IsNotNullOrWhitespace()) return options.PullRequestId;
+            if (!string.IsNullOrWhiteSpace(options.PullRequestId)) return options.PullRequestId;
             var prId = new EnvironmentVariables().GetEnvironmentVariable("APPVEYOR_PULL_REQUEST_NUMBER");
-            if (prId.IsNotNullOrWhitespace()) return prId;
+            if (!string.IsNullOrWhiteSpace(prId)) return prId;
             return null;
-        }
-
-        private GitData ResolveGitData()
-        {
-            var providers = new List<IGitDataResolver>
-            {
-                new CommandLineGitDataResolver(options),
-                new AppVeyorGitDataResolver(new EnvironmentVariables())
-            };
-
-            return providers
-                .Where(p => p.CanProvideData)
-                .Select(p => p.GitData)
-                .Aggregate(new GitData(), CombineGitData);
-        }
-
-        private GitData CombineGitData(GitData accum, GitData toAdd) =>
-            new GitData
-            {
-                Branch = accum.Branch ?? toAdd.Branch,
-                Head = new GitHead
-                {
-                    AuthorEmail = accum.Head.AuthorEmail ?? toAdd.Head.AuthorEmail,
-                    AuthorName = accum.Head.AuthorName ?? toAdd.Head.AuthorName,
-                    ComitterEmail = accum.Head.ComitterEmail ?? toAdd.Head.ComitterEmail,
-                    CommitterName = accum.Head.CommitterName ?? toAdd.Head.CommitterName,
-                    Id = accum.Head.Id ?? toAdd.Head.Id,
-                    Message = accum.Head.Message ?? toAdd.Head.Message
-                },
-                Remotes = new GitRemotes
-                {
-                    Name = accum.Remotes.Name ?? toAdd.Remotes.Name,
-                    Url = accum.Remotes.Url ?? toAdd.Remotes.Url
-                }
-            };
-
-        private async Task WriteFileData(string fileData, string outputFile)
-        {
-            try
-            {
-                await fileWriter.WriteAllText(outputFile, fileData);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError($"Failed to write data to output file '{outputFile}'.");
-                logger.LogError(ex.ToString());
-            }
         }
 
         private class CoverallsResponse
