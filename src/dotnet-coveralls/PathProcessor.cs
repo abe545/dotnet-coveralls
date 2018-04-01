@@ -1,23 +1,24 @@
 using System;
 using System.IO;
-using BCLExtensions;
+using Dotnet.Coveralls.CommandLine;
 
 namespace Dotnet.Coveralls
 {
     public class PathProcessor
     {
-        private readonly string _basePath;
+        private CoverallsOptions options;
+        private string BasePath => string.IsNullOrWhiteSpace(options.BasePath) ? Directory.GetCurrentDirectory() : options.BasePath;
 
-        public PathProcessor(string basePath)
+        public PathProcessor(CoverallsOptions options)
         {
-            _basePath = basePath.IsNotNullOrWhitespace() ? basePath : Directory.GetCurrentDirectory();
+            this.options = options;
         }
 
         public string ConvertPath(string path)
         {
-            if (path.StartsWith(_basePath, StringComparison.InvariantCultureIgnoreCase))
+            if (options.UseRelativePaths && path.StartsWith(BasePath, StringComparison.InvariantCultureIgnoreCase))
             {
-                return path.Substring(_basePath.Length);
+                return path.Substring(BasePath.Length);
             }
 
             return path;

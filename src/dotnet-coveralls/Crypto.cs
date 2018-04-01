@@ -1,13 +1,12 @@
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using Beefeater;
 
 namespace Dotnet.Coveralls
 {
     public class Crypto
     {
-        public static NotNull<string> CalculateMD5Digest(string data)
+        public static string CalculateMD5Digest(string data)
         {
             var md5 = MD5.Create();
             var inputBytes = Encoding.ASCII.GetBytes(data);

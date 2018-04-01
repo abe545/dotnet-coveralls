@@ -1,23 +1,24 @@
 ﻿using System;
 using System.Threading.Tasks;
-using clipr;
-using Dotnet.Coveralls.CommandLine;
-using Dotnet.Coveralls.Io;
-using Dotnet.Coveralls.Publishers;
-using Microsoft.Extensions.FileProviders;
+using clipr.Core;
+using Dotnet.Coveralls.Publishing;
 
 namespace Dotnet.Coveralls
 {
-
     public class Program
     {
         public static async Task<int> Main(string[] argv)
         {
             try
             {
-                var options = CliParser.Parse<CoverallsOptions>(argv);
-                var publisher = new CoverallsPublisher(new FileWriter(), new UnrestrictedFileProvider(Environment.CurrentDirectory));
-                return await publisher.Publish(options);
+                using (var scope = Di.Setup(argv))
+                {
+                    return await scope.Container.GetInstance<CoverallsPublisher>().Publish();
+                }
+            }
+            catch (ParserExit)
+            {
+                return 1;
             }
             catch (Exception ex)
             {

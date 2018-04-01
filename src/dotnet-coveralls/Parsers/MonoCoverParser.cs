@@ -1,54 +1,87 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Xml.Linq;
+using Dotnet.Coveralls.CommandLine;
 using Dotnet.Coveralls.Data;
+using Dotnet.Coveralls.Io;
+using Microsoft.Extensions.FileProviders;
 
 namespace Dotnet.Coveralls.Parsers
 {
-    public class MonoCoverParser
+    public class MonoCoverParser : ICoverageParser
     {
-        private readonly PathProcessor _pathProcessor;
+        private readonly PathProcessor pathProcessor;
+        private readonly CoverallsOptions options;
+        private readonly IFileProvider fileProvider;
 
-        public MonoCoverParser(PathProcessor pathProcessor)
+        public MonoCoverParser(
+            PathProcessor pathProcessor,
+            CoverallsOptions options,
+            IFileProvider fileProvider)
         {
-            _pathProcessor = pathProcessor;
+            this.pathProcessor = pathProcessor;
+            this.options = options;
+            this.fileProvider = fileProvider;
         }
 
-        public List<CoverageFile> GenerateSourceFiles(Dictionary<string, XDocument> documents, bool useRelativePaths)
+        public async Task<IEnumerable<CoverageFile>> ParseSourceFiles()
         {
-            var sourceFiles = new List<CoverageFile>();
-            foreach (var fileName in documents.Keys.Where(k => k.StartsWith("class-") && k.EndsWith(".xml")))
+            return await options.MonoCov.SelectMany(ParseFile);
+
+            async Task<IEnumerable<CoverageFile>> ParseFile(string directoryName)
             {
-                var rootDocument = documents[fileName];
-                var sourceElement = rootDocument.Root?.Element("source");
-                if (sourceElement != null)
+                var directory = fileProvider.GetDirectoryContents(directoryName);
+                if (!directory.Exists) throw new PublishCoverallsException($"{directoryName} was not found when parsing monocover report");
+
+                var documents = await LoadXDocuments();
+                return GenerateSourceFiles();
+
+                async Task<Dictionary<string, XDocument>> LoadXDocuments()
                 {
-                    var coverage = new List<int?>();
-                    var source = new List<string>();
-                    var filePath = sourceElement.Attribute("sourceFile").Value;
-                    if (useRelativePaths)
+                    var result = new Dictionary<string, XDocument>();
+
+                    foreach (var file in directory.Where(f => f.Name.EndsWith(".xml", StringComparison.InvariantCultureIgnoreCase)))
                     {
-                        filePath = _pathProcessor.ConvertPath(filePath);
+                        result.Add(file.Name, await file.ReadXml());
                     }
 
-                    foreach (var line in sourceElement.Elements("l"))
-                    {
-                        int coverageCount;
-                        if (!int.TryParse(line.Attribute("count").Value, out coverageCount))
-                        {
-                            coverageCount = -1;
-                        }
-                        coverage.Add(coverageCount == -1 ? null : (int?) coverageCount);
-                        source.Add(line.Value);
-                    }
-
-                    sourceFiles.Add(new CoverageFile(filePath,
-                        Crypto.CalculateMD5Digest(string.Join(",", source.ToArray())), coverage.ToArray()));
+                    return result;
                 }
+
+                IEnumerable<CoverageFile> GenerateSourceFiles() =>
+                    documents
+                        .Where(kv => kv.Key.StartsWith("class-") && kv.Key.EndsWith(".xml"))
+                        .Select(kv => kv.Value.Root?.Element("source"))
+                        .Where(sourceElement => sourceElement != null)
+                        .Select(sourceElement =>
+                        {
+                            var coverage = new List<int?>();
+                            var source = new List<string>();
+                            var filePath = sourceElement.Attribute("sourceFile").Value;
+                            if (options.UseRelativePaths)
+                            {
+                                filePath = pathProcessor.ConvertPath(filePath);
+                            }
+
+                            foreach (var line in sourceElement.Elements("l"))
+                            {
+                                if (!int.TryParse(line.Attribute("count").Value, out var coverageCount))
+                                {
+                                    coverage.Add(null);
+                                }
+                                else
+                                {
+                                    coverage.Add(coverageCount);
+                                }
+                                source.Add(line.Value);
+                            }
+
+                            return new CoverageFile(filePath,
+                                Crypto.CalculateMD5Digest(string.Join(",", source.ToArray())), coverage.ToArray());
+                        });
             }
-
-
-            return sourceFiles;
         }
     }
 }

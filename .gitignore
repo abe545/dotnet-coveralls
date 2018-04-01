@@ -99,6 +99,9 @@ _TeamCity*
 # Visual Studio export Coverage xml
 *.coveragexml
 
+# Coverlet coveragexml
+test/dotnet-coveralls.Tests/coverage.xml
+
 # NCrunch
 _NCrunch_*
 .*crunch*.local.xml

@@ -1,44 +1,73 @@
 ﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using Dotnet.Coveralls.CommandLine;
 using Dotnet.Coveralls.Data;
+using Dotnet.Coveralls.Io;
+using Microsoft.Extensions.FileProviders;
 
 namespace Dotnet.Coveralls.Parsers
 {
-    public class LcovParser
+    public class LcovParser : ICoverageParser
     {
-        public List<FileCoverageData> GenerateSourceFiles(string[] lines, bool useRelativePaths)
+        private readonly CoverallsOptions options;
+        private readonly IFileProvider fileProvider;
+        private readonly ICoverageFileBuilder coverageFileBuilder;
+
+        public LcovParser(
+            CoverallsOptions options,
+            IFileProvider fileProvider,
+            ICoverageFileBuilder coverageFileBuilder)
         {
-            FileCoverageDataBuilder coverageBuilder = null;
-            var files = new List<FileCoverageData>();
-            foreach (var line in lines)
+            this.options = options;
+            this.fileProvider = fileProvider;
+            this.coverageFileBuilder = coverageFileBuilder;
+        }
+
+        public async Task<IEnumerable<CoverageFile>> ParseSourceFiles()
+        {
+            return await coverageFileBuilder.Build(await options.Lcov.SelectMany(ParseFile));
+
+            async Task<IEnumerable<FileCoverageData>> ParseFile(string fileName)
             {
-                var matches = Regex.Match(line, "^SF:(.*)");
-                if (matches.Success)
+                var fileInfo = fileProvider.GetFileInfo(fileName);
+                if (!fileInfo.Exists) throw new PublishCoverallsException($"{fileName} was not found when parsing lcov report");
+
+                var lines = await fileInfo.ReadAllLines();
                 {
-                    coverageBuilder = new FileCoverageDataBuilder(matches.Groups[1].Value);
-                    continue;
-                }
-                matches = Regex.Match(line, @"^DA:(\d+),(\d+)");
-                if (matches.Success)
-                {
-                    if (coverageBuilder != null)
+                    FileCoverageDataBuilder coverageBuilder = null;
+                    var files = new List<FileCoverageData>();
+                    foreach (var line in lines)
                     {
-                        var lineNumber = int.Parse(matches.Groups[1].Value);
-                        var coverageNumber = int.Parse(matches.Groups[2].Value);
-                        coverageBuilder.RecordCoverage(lineNumber, coverageNumber);
+                        var matches = Regex.Match(line, "^SF:(.*)");
+                        if (matches.Success)
+                        {
+                            coverageBuilder = new FileCoverageDataBuilder(matches.Groups[1].Value);
+                            continue;
+                        }
+                        matches = Regex.Match(line, @"^DA:(\d+),(\d+)");
+                        if (matches.Success)
+                        {
+                            if (coverageBuilder != null)
+                            {
+                                var lineNumber = int.Parse(matches.Groups[1].Value);
+                                var coverageNumber = int.Parse(matches.Groups[2].Value);
+                                coverageBuilder.RecordCoverage(lineNumber, coverageNumber);
+                            }
+                            continue;
+                        }
+                        if (line.Equals("end_of_record"))
+                        {
+                            if (coverageBuilder != null)
+                            {
+                                files.Add(coverageBuilder.CreateFile());
+                                coverageBuilder = null;
+                            }
+                        }
                     }
-                    continue;
-                }
-                if (line.Equals("end_of_record"))
-                {
-                    if (coverageBuilder != null)
-                    {
-                        files.Add(coverageBuilder.CreateFile());
-                        coverageBuilder = null;
-                    }
+                    return files;
                 }
             }
-            return files;
         }
     }
 }
