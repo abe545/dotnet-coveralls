@@ -1,5 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using clipr;
+using clipr.Core;
+using clipr.Usage;
 
 namespace Dotnet.Coveralls.CommandLine
 {
@@ -12,7 +15,7 @@ namespace Dotnet.Coveralls.CommandLine
         [NamedArgument("dry-run", Action = ParseAction.StoreTrue, Description = "This flag will stop coverage results being posted to coveralls.io")]
         public bool DryRun { get; set; }
 
-        [NamedArgument('o', "output", Description = "The coverage results json will be written to this file if provided.")]
+        [NamedArgument("output", Description = "The coverage results json will be written to this file if provided.")]
         public string Output { get; set; }
 
         [NamedArgument("open-cover", Description = "One ore more OpenCover xml files to include", Action = ParseAction.Append)]
@@ -71,5 +74,33 @@ namespace Dotnet.Coveralls.CommandLine
 
         [NamedArgument("pr-id", Description = "The pull request id. Used for updating status on PRs for source control providers that support them (GitHub, BitBucket, etc.).")]
         public string PullRequestId { get; set; }
+
+        public static string Usage => new AutomaticHelpGenerator<CoverallsOptions>().GetHelp(new CliParser<CoverallsOptions>(new CoverallsOptions()).Config);
+        public static CoverallsOptions Parse(string[] args)
+        {
+            var res = new CoverallsOptions();
+            var parser = new CliParser<CoverallsOptions>(res);
+            try
+            {
+                //var res = CliParser.Parse<CoverallsOptions>(args);
+                parser.Parse(args);
+
+                if (!(res.OpenCover.SafeAny() ||
+                      res.MonoCov.SafeAny() ||
+                      res.Chutzpah.SafeAny() ||
+                      res.DynamicCodeCoverage.SafeAny() ||
+                      res.Lcov.SafeAny() ||
+                      res.VsCoverage.SafeAny()))
+                {
+                    throw new Exception(Usage);
+                }
+
+                return res;
+            }
+            catch (ParseException ex)
+            {
+                throw new Exception($"{ex.Message}{Environment.NewLine}{Environment.NewLine}{Usage}");
+            }
+        }
     }
 }

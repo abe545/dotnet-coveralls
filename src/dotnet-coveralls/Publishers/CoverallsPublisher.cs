@@ -41,7 +41,6 @@ namespace Dotnet.Coveralls.Publishers
 
         public async Task<int> Publish()
         {
-            var repoToken = ResolveRepoToken();
             var outputFile = ResolveOutpuFile();
 
             var files = await ParseCoverageFiles();
@@ -56,7 +55,6 @@ namespace Dotnet.Coveralls.Publishers
 
             var data = new CoverallData
             {
-                RepoToken = repoToken,
                 ServiceJobId = serviceJobId,
                 ServiceName = serviceName ?? "dotnet-coveralls",
                 ServiceNumber = serviceNumber,
@@ -67,17 +65,21 @@ namespace Dotnet.Coveralls.Publishers
             };
 
             var contractResolver = new DefaultContractResolver { NamingStrategy = new SnakeCaseNamingStrategy() };
-            var fileData = JsonConvert.SerializeObject(data, new JsonSerializerSettings { ContractResolver = contractResolver, DefaultValueHandling = DefaultValueHandling.Ignore });
             if (!string.IsNullOrWhiteSpace(outputFile))
             {
-                await WriteFileData(fileData, outputFile);
+                await WriteFileData(SerializeCoverallsData(), outputFile);
             }
             if (!options.DryRun)
             {
-                await UploadCoverage(fileData, options.IgnoreUploadErrors);
+                data.RepoToken = ResolveRepoToken();
+                await UploadCoverage(SerializeCoverallsData(), options.IgnoreUploadErrors);
             }
 
             return 0;
+
+            string SerializeCoverallsData() => JsonConvert.SerializeObject(
+                data,
+                new JsonSerializerSettings { ContractResolver = contractResolver, DefaultValueHandling = DefaultValueHandling.Ignore });
         }
 
         private string ResolveOutpuFile()

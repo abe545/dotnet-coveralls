@@ -7,6 +7,8 @@ namespace Dotnet.Coveralls
 {
     public static class EnumerableExtensions
     {
+        public static bool SafeAny<T>(this IEnumerable<T> collection) => collection?.Any() ?? false;
+
         public static async Task<IEnumerable<R>> Select<T, R>(this IEnumerable<T> collection, Func<T, Task<R>> selector)
         {
             if (collection == null) return Enumerable.Empty<R>();

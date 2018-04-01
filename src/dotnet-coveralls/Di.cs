@@ -1,7 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 using clipr;
+using clipr.Core;
+using clipr.Usage;
 using Dotnet.Coveralls.CommandLine;
 using Dotnet.Coveralls.Data;
 using Dotnet.Coveralls.Io;
@@ -18,11 +19,13 @@ namespace Dotnet.Coveralls
     {
         public static Scope Setup(string[] args)
         {
+            var options = CoverallsOptions.Parse(args);            
+
             var container = new Container();
             container.Options.DefaultLifestyle = Lifestyle.Scoped;
             container.Options.DefaultScopedLifestyle = new AsyncScopedLifestyle();
 
-            container.Register(() => CliParser.Parse<CoverallsOptions>(args));
+            container.Register(() => options);
             container.Register<IFileWriter, FileWriter>();
             container.Register<IFileProvider>(() => new UnrestrictedFileProvider(Environment.CurrentDirectory));
             container.Register<CoverallsPublisher>();

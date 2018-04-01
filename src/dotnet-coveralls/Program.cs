@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
+using clipr.Core;
 using Dotnet.Coveralls.Publishers;
-using SimpleInjector.Lifestyles;
 
 namespace Dotnet.Coveralls
 {
@@ -15,6 +15,10 @@ namespace Dotnet.Coveralls
                 {
                     return await scope.Container.GetInstance<CoverallsPublisher>().Publish();
                 }
+            }
+            catch (ParserExit)
+            {
+                return 1;
             }
             catch (Exception ex)
             {
