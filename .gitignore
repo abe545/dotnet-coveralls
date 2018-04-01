@@ -199,3 +199,6 @@ coveralls.net.*.nupkg
 opencovertests.xml
 *Report.xml
 *Report.html
+
+#We still want these
+!EmptyReport.xml
