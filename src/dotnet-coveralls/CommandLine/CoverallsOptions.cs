@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using clipr;
-using clipr.Core;
 using clipr.Usage;
 
 namespace Dotnet.Coveralls.CommandLine
