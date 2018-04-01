@@ -1,6 +1,6 @@
 ﻿namespace Dotnet.Coveralls.Data
 {
-    public sealed class CoverallData
+    public sealed class CoverallsData
     {
         public string RepoToken { get; set; }
         public string ServiceJobId { get; set; }

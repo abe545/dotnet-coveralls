@@ -5,6 +5,7 @@ using Dotnet.Coveralls.Data;
 using Dotnet.Coveralls.Git;
 using Dotnet.Coveralls.Io;
 using Dotnet.Coveralls.Parsers;
+using Dotnet.Coveralls.Publishing;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using SimpleInjector;
@@ -32,12 +33,19 @@ namespace Dotnet.Coveralls
 
             container.Register<CoverallsPublisher>();
             container.Register<ICoverageFileBuilder, CoverageFileBuilder>();
+            container.Register<ICoverallsDataBuilder, CoverallsDataBuilder>();
 
             container.RegisterCollection<ICoverageParser>(new[] { typeof(Di).Assembly });
-            container.Register<ICoverageProvider, CoverageProvider>();
-
             container.RegisterCollection<IGitDataResolver>(new[] { typeof(Di).Assembly });
-            container.Register<IGitDataProvider, GitDataProvider>();
+
+            container.RegisterCollection<ICoverallsDataProvider>(new[] 
+            {
+                typeof(CommandLineProvider),
+                typeof(GitDataProvider),
+                typeof(CoverageProvider),
+                typeof(AppVeyorGitDataResolver),
+                typeof(FallbackProvider),
+            });
 
             return AsyncScopedLifestyle.BeginScope(container);
         }

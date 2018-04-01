@@ -1,67 +1,44 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Dotnet.Coveralls.Adapters;
 using Dotnet.Coveralls.CommandLine;
-using Dotnet.Coveralls.Data;
-using Dotnet.Coveralls.Git;
 using Dotnet.Coveralls.Io;
-using Dotnet.Coveralls.Parsers;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace Dotnet.Coveralls
+namespace Dotnet.Coveralls.Publishing
 {
     public class CoverallsPublisher
     {
         private readonly CoverallsOptions options;
-        private readonly ICoverageProvider coverageProvider;
-        private readonly IGitDataProvider gitDataProvider;
+        private readonly ICoverallsDataBuilder coverallsDataBuilder;
         private readonly IOutputFileWriter fileWriter;
         private readonly IFileProvider fileProvider;
+        private readonly IEnvironmentVariables environmentVariables;
         private readonly ILogger<CoverallsPublisher> logger;
 
         public CoverallsPublisher(
             CoverallsOptions options,
-            ICoverageProvider coverageProvider,
-            IGitDataProvider gitDataProvider,
+            ICoverallsDataBuilder coverallsDataBuilder,
             IOutputFileWriter fileWriter, 
             IFileProvider fileProvider,
+            IEnvironmentVariables environmentVariables,
             ILoggerFactory loggerFactory)
         {
             this.options = options;
-            this.coverageProvider = coverageProvider;
-            this.gitDataProvider = gitDataProvider;
+            this.coverallsDataBuilder = coverallsDataBuilder;
             this.fileWriter = fileWriter;
             this.fileProvider = fileProvider;
+            this.environmentVariables = environmentVariables;
             this.logger = loggerFactory.CreateLogger<CoverallsPublisher>();
         }
 
         public async Task<int> Publish()
         {
-            var files = await coverageProvider.ProvideCoverageFiles();
-            var gitData = gitDataProvider.ProvideGitData();
-
-            var serviceName = ResolveServiceName();
-            var serviceJobId = ResolveServiceJobId();
-            var serviceNumber = ResolveServiceNumber();
-            var pullRequestId = ResolvePullRequestId();
-            var parallel = options.Parallel;
-
-            var data = new CoverallData
-            {
-                ServiceJobId = serviceJobId,
-                ServiceName = serviceName ?? "dotnet-coveralls",
-                ServiceNumber = serviceNumber,
-                PullRequestId = pullRequestId,
-                SourceFiles = files,
-                Parallel = parallel,
-                Git = gitData
-            };
+            var data = await coverallsDataBuilder.ProvideCoverallsData();
 
             var contractResolver = new DefaultContractResolver { NamingStrategy = new SnakeCaseNamingStrategy() };
             await fileWriter.WriteCoverageOutput(SerializeCoverallsData());
@@ -79,19 +56,19 @@ namespace Dotnet.Coveralls
                 new JsonSerializerSettings { ContractResolver = contractResolver, DefaultValueHandling = DefaultValueHandling.Ignore });
         }
 
-        private  string ResolveRepoToken()
+        private string ResolveRepoToken()
         {
             string repoToken;
             if (!string.IsNullOrWhiteSpace(options.RepoToken))
             {
-                repoToken = options.RepoToken;
+                return options.RepoToken;
             }
             else
             {
-                repoToken = Environment.GetEnvironmentVariable("COVERALLS_REPO_TOKEN");
+                repoToken = environmentVariables.GetEnvironmentVariable("COVERALLS_REPO_TOKEN");
                 if (string.IsNullOrWhiteSpace(repoToken))
                 {
-                    ExitWithError("No token found in Environment Variable 'COVERALLS_REPO_TOKEN'.");
+                    throw new PublishCoverallsException("No token found in Environment Variable 'COVERALLS_REPO_TOKEN'.");
                 }
             }
             return repoToken;
@@ -109,7 +86,7 @@ namespace Dotnet.Coveralls
                 }
                 else
                 {
-                    ExitWithError(message);
+                    throw new PublishCoverallsException(message);
                 }
             }
             else
@@ -142,40 +119,6 @@ namespace Dotnet.Coveralls
                     return (true, null);
                 }
             }
-        }
-
-        private void ExitWithError(string message) => throw new PublishCoverallsException(message);
-
-        private string ResolveServiceName()
-        {
-            if (!string.IsNullOrWhiteSpace(options.ServiceName)) return options.ServiceName;
-            var isAppVeyor = new EnvironmentVariables().GetEnvironmentVariable("APPVEYOR");
-            if (isAppVeyor == "True") return "appveyor";
-            return "dotnet-coveralls";
-        }
-
-        private string ResolveServiceJobId()
-        {
-            if (!string.IsNullOrWhiteSpace(options.JobId)) return options.JobId;
-            var jobId = new EnvironmentVariables().GetEnvironmentVariable("APPVEYOR_JOB_ID");
-            if (!string.IsNullOrWhiteSpace(jobId)) return jobId;
-            return null;
-        }
-
-        private string ResolveServiceNumber()
-        {
-            if (!string.IsNullOrWhiteSpace(options.BuildNumber)) return options.BuildNumber;
-            var jobId = new EnvironmentVariables().GetEnvironmentVariable("APPVEYOR_BUILD_NUMBER");
-            if (!string.IsNullOrWhiteSpace(jobId)) return jobId;
-            return null;
-        }
-
-        private string ResolvePullRequestId()
-        {
-            if (!string.IsNullOrWhiteSpace(options.PullRequestId)) return options.PullRequestId;
-            var prId = new EnvironmentVariables().GetEnvironmentVariable("APPVEYOR_PULL_REQUEST_NUMBER");
-            if (!string.IsNullOrWhiteSpace(prId)) return prId;
-            return null;
         }
 
         private class CoverallsResponse
