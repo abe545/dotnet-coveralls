@@ -36,14 +36,20 @@ namespace Dotnet.Coveralls
             container.Register<ICoverallsDataBuilder, CoverallsDataBuilder>();
 
             container.RegisterCollection<ICoverageParser>(new[] { typeof(Di).Assembly });
-            container.RegisterCollection<IGitDataResolver>(new[] { typeof(Di).Assembly });
+            container.RegisterCollection<IGitDataResolver>(new[] 
+            {
+                typeof(CommandLineGitDataResolver),
+                typeof(AppVeyorProvider),
+                typeof(EnvironmentVariablesProvider),
+            });
 
             container.RegisterCollection<ICoverallsDataProvider>(new[] 
             {
                 typeof(CommandLineProvider),
                 typeof(GitDataProvider),
                 typeof(CoverageProvider),
-                typeof(AppVeyorGitDataResolver),
+                typeof(AppVeyorProvider),
+                typeof(EnvironmentVariablesProvider),
                 typeof(FallbackProvider),
             });
 

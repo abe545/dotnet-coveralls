@@ -5,11 +5,11 @@ using System.Threading.Tasks;
 
 namespace Dotnet.Coveralls.Git
 {
-    public class AppVeyorGitDataResolver : IGitDataResolver, ICoverallsDataProvider
+    public class AppVeyorProvider : IGitDataResolver, ICoverallsDataProvider
     {
         private readonly IEnvironmentVariables variables;
 
-        public AppVeyorGitDataResolver(IEnvironmentVariables variables)
+        public AppVeyorProvider(IEnvironmentVariables variables)
         {
             this.variables = variables;
         }

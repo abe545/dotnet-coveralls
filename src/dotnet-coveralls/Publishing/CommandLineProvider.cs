@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Dotnet.Coveralls.CommandLine;
 using Dotnet.Coveralls.Data;
 
@@ -24,6 +21,7 @@ namespace Dotnet.Coveralls.Publishing
             ServiceJobId = options.JobId,
             ServiceNumber = options.BuildNumber,
             PullRequestId = options.PullRequestId,
+            RepoToken = options.RepoToken,
         });
     }
 }

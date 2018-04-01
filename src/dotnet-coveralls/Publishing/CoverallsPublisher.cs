@@ -41,11 +41,18 @@ namespace Dotnet.Coveralls.Publishing
             var data = await coverallsDataBuilder.ProvideCoverallsData();
 
             var contractResolver = new DefaultContractResolver { NamingStrategy = new SnakeCaseNamingStrategy() };
-            await fileWriter.WriteCoverageOutput(SerializeCoverallsData());
 
-            if (!options.DryRun)
+            if (options.DryRun)
             {
-                data.RepoToken = ResolveRepoToken();
+                data.RepoToken = "***";
+                await fileWriter.WriteCoverageOutput(SerializeCoverallsData());
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(data.RepoToken))
+                {
+                    throw new PublishCoverallsException("No coveralls token specified. Either pass it with --repo-token or set it in the Environment Variable 'COVERALLS_REPO_TOKEN'.");
+                }
                 await UploadCoverage(SerializeCoverallsData());
             }
 
@@ -54,24 +61,6 @@ namespace Dotnet.Coveralls.Publishing
             string SerializeCoverallsData() => JsonConvert.SerializeObject(
                 data,
                 new JsonSerializerSettings { ContractResolver = contractResolver, DefaultValueHandling = DefaultValueHandling.Ignore });
-        }
-
-        private string ResolveRepoToken()
-        {
-            string repoToken;
-            if (!string.IsNullOrWhiteSpace(options.RepoToken))
-            {
-                return options.RepoToken;
-            }
-            else
-            {
-                repoToken = environmentVariables.GetEnvironmentVariable("COVERALLS_REPO_TOKEN");
-                if (string.IsNullOrWhiteSpace(repoToken))
-                {
-                    throw new PublishCoverallsException("No token found in Environment Variable 'COVERALLS_REPO_TOKEN'.");
-                }
-            }
-            return repoToken;
         }
 
         private  async Task UploadCoverage(string fileData)

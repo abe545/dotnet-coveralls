@@ -14,7 +14,7 @@ namespace Dotnet.Coveralls.CommandLine
         [NamedArgument("dry-run", Action = ParseAction.StoreTrue, Description = "This flag will stop coverage results being posted to coveralls.io")]
         public bool DryRun { get; set; }
 
-        [NamedArgument("output", Description = "The coverage results json will be written to this file if provided.")]
+        [NamedArgument("output", Description = "The coverage results json will be written to this file if provided, and dry-run is also set.")]
         public string Output { get; set; }
 
         [NamedArgument("open-cover", Description = "One ore more OpenCover xml files to include", Action = ParseAction.Append)]

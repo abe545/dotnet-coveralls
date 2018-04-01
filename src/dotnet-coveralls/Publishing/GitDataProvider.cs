@@ -31,17 +31,17 @@ namespace Dotnet.Coveralls.Publishing
                     Branch = accum.Branch ?? toAdd.Branch,
                     Head = new GitHead
                     {
-                        AuthorEmail = accum.Head.AuthorEmail ?? toAdd.Head.AuthorEmail,
-                        AuthorName = accum.Head.AuthorName ?? toAdd.Head.AuthorName,
-                        ComitterEmail = accum.Head.ComitterEmail ?? toAdd.Head.ComitterEmail,
-                        CommitterName = accum.Head.CommitterName ?? toAdd.Head.CommitterName,
-                        Id = accum.Head.Id ?? toAdd.Head.Id,
-                        Message = accum.Head.Message ?? toAdd.Head.Message
+                        AuthorEmail = accum.Head?.AuthorEmail ?? toAdd.Head?.AuthorEmail,
+                        AuthorName = accum.Head?.AuthorName ?? toAdd.Head?.AuthorName,
+                        ComitterEmail = accum.Head?.ComitterEmail ?? toAdd.Head?.ComitterEmail,
+                        CommitterName = accum.Head?.CommitterName ?? toAdd.Head?.CommitterName,
+                        Id = accum.Head?.Id ?? toAdd.Head?.Id,
+                        Message = accum.Head?.Message ?? toAdd.Head?.Message
                     },
                     Remotes = new GitRemotes
                     {
-                        Name = accum.Remotes.Name ?? toAdd.Remotes.Name,
-                        Url = accum.Remotes.Url ?? toAdd.Remotes.Url
+                        Name = accum.Remotes?.Name ?? toAdd.Remotes?.Name,
+                        Url = accum.Remotes?.Url ?? toAdd.Remotes?.Url
                     }
                 };
         }
