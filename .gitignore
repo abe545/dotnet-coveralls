@@ -202,3 +202,4 @@ opencovertests.xml
 
 #We still want these
 !EmptyReport.xml
+!SingleFileReport.xml
