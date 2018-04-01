@@ -4,7 +4,7 @@ using Machine.Specifications;
 using NSubstitute;
 using Shouldly;
 
-namespace Dotnet.Coveralls.Tests.OpenCover
+namespace Dotnet.Coveralls.Tests.Parsers.OpenCover
 {
     [Subject(typeof(OpenCoverParser))]
     public class when_report_is_empty : when_file_exists

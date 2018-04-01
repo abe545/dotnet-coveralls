@@ -5,7 +5,7 @@ using Machine.Specifications;
 using NSubstitute;
 using Shouldly;
 
-namespace Dotnet.Coveralls.Tests.Chutzpah
+namespace Dotnet.Coveralls.Tests.Parsers.Chutzpah
 {
     [Subject(typeof(ChutzpahJsonParser))]
     public class when_paths_are_not_relative : when_chutzpah_file_exists
