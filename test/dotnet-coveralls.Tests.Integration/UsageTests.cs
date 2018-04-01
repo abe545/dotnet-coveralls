@@ -28,7 +28,7 @@ namespace Dotnet.Coveralls.Tests.Integration
                 CoverallsTestRunner.RunCoveralls("--open-cover opencover.xml --dry-run --repo-token MYTESTREPOTOKEN");
 
             Assert.NotEqual(0, results.ExitCode);
-            Assert.Contains("Input file 'opencover.xml' cannot be found", results.StandardError);
+            Assert.Contains("opencover.xml was not found when parsing open cover report", results.StandardError);
         }
     }
 }
