@@ -6,6 +6,7 @@
     <PackageId>dotnet-coveralls</PackageId>
     <RootNamespace>Dotnet.Coveralls</RootNamespace>
     <LangVersion>latest</LangVersion>
+    <PackageVersion>0.1.0</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
