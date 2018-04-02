@@ -38,7 +38,7 @@ namespace Dotnet.Coveralls.Git
             ServiceName = "appveryor",
             ServiceJobId = variables.GetEnvironmentVariable("APPVEYOR_JOB_ID"),
             ServiceNumber = variables.GetEnvironmentVariable("APPVEYOR_BUILD_VERSION"),
-            PullRequestId = variables.GetEnvironmentVariable("APPVEYOR_PULL_REQUEST_NUMBER"),
+            ServicePullRequest = variables.GetEnvironmentVariable("APPVEYOR_PULL_REQUEST_NUMBER"),
         });
     }
 }

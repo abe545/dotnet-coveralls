@@ -26,7 +26,7 @@ namespace Dotnet.Coveralls.Publishing
                 {
                     Git = accum.Git ?? toAdd.Git,
                     Parallel = accum.Parallel ?? toAdd.Parallel,
-                    PullRequestId = accum.PullRequestId ?? toAdd.PullRequestId,
+                    ServicePullRequest = accum.ServicePullRequest ?? toAdd.ServicePullRequest,
                     RepoToken = accum.RepoToken ?? toAdd.RepoToken,
                     ServiceJobId = accum.ServiceJobId ?? toAdd.ServiceJobId,
                     ServiceName = accum.ServiceName ?? toAdd.ServiceName,

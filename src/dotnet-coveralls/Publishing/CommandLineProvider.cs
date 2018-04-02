@@ -20,7 +20,7 @@ namespace Dotnet.Coveralls.Publishing
             ServiceName = options.ServiceName,
             ServiceJobId = options.JobId,
             ServiceNumber = options.BuildNumber,
-            PullRequestId = options.PullRequestId,
+            ServicePullRequest = options.PullRequestId,
             RepoToken = options.RepoToken,
         });
     }
