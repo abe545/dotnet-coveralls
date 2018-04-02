@@ -25,7 +25,7 @@ namespace Dotnet.Coveralls.Publishing
         {
             ServiceName = environmentVariables.GetEnvironmentVariable("CI_NAME"),
             ServiceNumber = environmentVariables.GetEnvironmentVariable("CI_BUILD_NUMBER"),
-            PullRequestId = environmentVariables.GetEnvironmentVariable("CI_PULL_REQUEST"),
+            ServicePullRequest = environmentVariables.GetEnvironmentVariable("CI_PULL_REQUEST"),
             RepoToken = environmentVariables.GetEnvironmentVariable("COVERALLS_REPO_TOKEN")
         });
     }

@@ -5,8 +5,9 @@
         public string RepoToken { get; set; }
         public string ServiceJobId { get; set; }
         public string ServiceName { get; set; }
+        public string ServiceBuildUrl { get; set; }
         public string ServiceNumber { get; set; }
-        public string PullRequestId { get; set; }
+        public string ServicePullRequest { get; set; }
         public bool? Parallel { get; set; }
         public CoverageFile[] SourceFiles { get; set; }
         public GitData Git { get; set; }
@@ -16,7 +17,7 @@
     {
         public GitHead Head { get; set; }
         public string Branch { get; set; }
-        public GitRemotes Remotes { get; set; }
+        public GitRemote[] Remotes { get; set; }
     }
 
     public sealed class GitHead
@@ -29,7 +30,7 @@
         public string Message { get; set; }
     }
 
-    public sealed class GitRemotes
+    public sealed class GitRemote
     {
         public string Name { get; set; }
         public string Url { get; set; }

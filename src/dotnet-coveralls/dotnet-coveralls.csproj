@@ -7,12 +7,14 @@
     <RootNamespace>Dotnet.Coveralls</RootNamespace>
     <LangVersion>latest</LangVersion>
     <PackageVersion>0.1.0</PackageVersion>
+    <Title>A .net cli tool to publish coverage data to coveralls.io</Title>
+    <Authors>Abraham Heidebrecht</Authors>
+    <PackageProjectUrl>https://github.com/abe545/dotnet-coveralls</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="clipr" Version="1.6.1" />
     <PackageReference Include="CommandLineParser" Version="2.2.1" />
-    <PackageReference Include="docopt.net" Version="0.6.1.9" />
     <PackageReference Include="Microsoft.Extensions.FileProviders.Physical" Version="1.1.1" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="1.1.2" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.2" />

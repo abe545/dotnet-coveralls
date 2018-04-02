@@ -1,38 +1,32 @@
 dotnet-coveralls
 =============
+[![Build status](https://ci.appveyor.com/api/projects/status/up29r5k4ca0900q1/branch/master?svg=true)](https://ci.appveyor.com/project/abe545/dotnet-coveralls/branch/master) [![Coverage Status](https://coveralls.io/repos/github/abe545/dotnet-coveralls/badge.svg?branch=master)](https://coveralls.io/github/abe545/dotnet-coveralls?branch=master)
 
 Hard fork of [coveralls.net](https://github.com/csMACnz/coveralls.net) to create a simple `dotnet coveralls` publishing cli
 
-Usage is available via `--help` but here it is too:
+I am currently working on modularizing the code, and adding more tests. The only publisher that is really tested at all is Open Cover, however the original implementor claims that it works with the following coverage tools (feel free to submit a pr to add tests that prove they work!):
+
+* Dynamic Code Coverage (CodeCoverage.exe)
+* Visual Studio Code Coverage xml results
+* Monocov coverage results (these apparently get output to a directory, which is the input for this coverage parser)
+* Chutzpah json results
+* lcov results
+
+Installation
+=============
+It is published as a nuget package, but you should install it as a cli tool. It is generally only useful for .net core projects (and it is compiled against .net core 2.0, so you'll need that sdk to run this tool, and not sure if it will work for 1.x projects)
+`<DotNetCliToolReference Include="dotnet-coveralls" Version="<latest-version-here>" />`
+
+Usage
+=============
+After installation, full usage is available from the command line `dotnet coveralls --help`
+
+You'll need to pass one or more coverage files to the command line, via the individual parser's switch. You can pass each file type switch multiple times (or mix and match your coverage types), and it will merge the coverage report for you. Here's an example of how this repo passes data to coveralls for its tests:
 
 ```
- --repo-token             The coveralls.io repository token. If not set, will get value from the COVERALLS_REPO_TOKEN
-                          environment variable.
- --dry-run                This flag will stop coverage results being posted to coveralls.io
- --open-cover             One ore more OpenCover xml files to include
- --dynamic-code-coverage  One ore more CodeCoverage.exe xml files to include
- --vs-coverage            One ore more Visual Studio Coverage xml files to include
- --monocov                One ore more monocov results folders to include
- --chutzpah               One ore more chutzpah json files to include
- --lcov                   One ore more lcov files to include
- --parallel               If using parallel builds. If sent, coveralls.io will wait for the webhook before completing
-                          the build.
- --use-relative-paths     If set, will attempt to strip the current working directory from the beginning of the source
-                          file paths in the coverage reports.
- --base-path              When use-relative-paths and a basePath is provided, this path is used instead of the current
-                          working directory.
- --service-name           The name of the service generating coveralls reports.
- --job-id                 The unique job Id to provide to coveralls.io.
- --build-number           The build number. Will increment automatically if not specified.
- --ignore-upload-errors   If set, will exit with code 0 on upload error.
- --commit-id              The git commit hash for the coverage report. If omitted, will attempt to get it from git.
- --commit-branch          The git commit branch for the coverage report. If omitted, will attempt to get it from git.
- --commit-author          The git commit author for the coverage report. If omitted, will attempt to get it from git.
- --commit-email           The git commit email for the coverage report. If omitted, will attempt to get it from git.
- --commit-message         The git commit message for the coverage report. If omitted, will attempt to get it from git.
- --pr-id                  The pull request id. Used for updating status on PRs for source control providers that support
-                          them (GitHub, BitBucket, etc.).
- -h, --help               Display this help document.
- -o, --output             The coverage results json will be written to this file if provided.
- --version                Displays the version of the current executable.
- ```
+dotnet cover --open-cover C:\projects\dotnet-coveralls\test\dotnet-coveralls.Tests\coverage.xml --use-relative-paths --base-path C:\projects\dotnet-coveralls
+```
+
+I tried to support the documentation on [coveralls.io](https://docs.coveralls.io/supported-ci-services). Basically, all the `CI_*` environment variables can be used to pass the majority of the information that coveralls needs to generate reports. 
+
+Appveyor users will have all this info provided for you, with the exception of the repo token.
