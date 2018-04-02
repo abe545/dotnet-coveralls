@@ -32,7 +32,6 @@ namespace Dotnet.Coveralls.Publishing
                     ServiceName = accum.ServiceName ?? toAdd.ServiceName,
                     ServiceNumber = accum.ServiceNumber ?? toAdd.ServiceNumber,
                     SourceFiles = accum.SourceFiles ?? toAdd.SourceFiles,
-                    CommitSha = accum.CommitSha ?? toAdd.CommitSha,
                 };
         }
     }
