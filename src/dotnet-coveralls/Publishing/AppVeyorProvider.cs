@@ -26,17 +26,16 @@ namespace Dotnet.Coveralls.Git
                         variables.GetEnvironmentVariable("APPVEYOR_REPO_COMMIT"),
                     //AuthorEmail = variables.GetEnvironmentVariable("APPVEYOR_REPO_COMMIT_AUTHOR_EMAIL"),
                     //ComitterEmail = variables.GetEnvironmentVariable("APPVEYOR_REPO_COMMIT_AUTHOR_EMAIL"),
-                    //Message = variables.GetEnvironmentVariable("APPVEYOR_REPO_COMMIT_MESSAGE")
+                    Message = variables.GetEnvironmentVariable("APPVEYOR_REPO_COMMIT_MESSAGE")
                 },
-                Branch = variables.GetEnvironmentVariable("APPVEYOR_PULL_REQUEST_NUMBER") != null ? null :
-                    variables.GetEnvironmentVariable("APPVEYOR_REPO_BRANCH")
+                Branch = variables.GetEnvironmentVariable("APPVEYOR_REPO_BRANCH")
             };
 
         public Task<CoverallsData> ProvideCoverallsData() => Task.FromResult(new CoverallsData
         {
             ServiceName = "appveyor",
             ServiceJobId = variables.GetEnvironmentVariable("APPVEYOR_JOB_ID"),
-            ServiceNumber = variables.GetEnvironmentVariable("APPVEYOR_BUILD_VERSION"),
+            ServiceNumber = variables.GetEnvironmentVariable("APPVEYOR_BUILD_NUMBER"),
             ServicePullRequest = variables.GetEnvironmentVariable("APPVEYOR_PULL_REQUEST_NUMBER"),
             ServiceBuildUrl = $"https://ci.appveyor.com/project/{variables.GetEnvironmentVariable("APPVEYOR_REPO_NAME")}/build/{variables.GetEnvironmentVariable("APPVEYOR_BUILD_VERSION")}",
         });
