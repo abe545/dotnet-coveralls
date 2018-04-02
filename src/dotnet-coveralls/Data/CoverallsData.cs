@@ -17,7 +17,7 @@
     {
         public GitHead Head { get; set; }
         public string Branch { get; set; }
-        public GitRemotes Remotes { get; set; }
+        public GitRemote[] Remotes { get; set; }
     }
 
     public sealed class GitHead
@@ -30,7 +30,7 @@
         public string Message { get; set; }
     }
 
-    public sealed class GitRemotes
+    public sealed class GitRemote
     {
         public string Name { get; set; }
         public string Url { get; set; }
