@@ -21,17 +21,12 @@ namespace Dotnet.Coveralls.Git
             {
                 Head = new GitHead
                 {
-                    Id =
-                        variables.GetEnvironmentVariable("APPVEYOR_PULL_REQUEST_HEAD_COMMIT") ??
-                        variables.GetEnvironmentVariable("APPVEYOR_REPO_COMMIT"),
-                    AuthorName = variables.GetEnvironmentVariable("APPVEYOR_REPO_COMMIT_AUTHOR"),
+                    Id = variables.GetEnvironmentVariable("APPVEYOR_REPO_COMMIT"),
                     AuthorEmail = variables.GetEnvironmentVariable("APPVEYOR_REPO_COMMIT_AUTHOR_EMAIL"),
-                    CommitterName = variables.GetEnvironmentVariable("APPVEYOR_REPO_COMMIT_AUTHOR"),
                     ComitterEmail = variables.GetEnvironmentVariable("APPVEYOR_REPO_COMMIT_AUTHOR_EMAIL"),
                     Message = variables.GetEnvironmentVariable("APPVEYOR_REPO_COMMIT_MESSAGE")
                 },
-                Branch =
-                    variables.GetEnvironmentVariable("APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH") ??
+                Branch = variables.GetEnvironmentVariable("APPVEYOR_PULL_REQUEST_NUMBER") != null ? null :
                     variables.GetEnvironmentVariable("APPVEYOR_REPO_BRANCH")
             };
 
