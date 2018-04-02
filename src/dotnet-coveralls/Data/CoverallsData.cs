@@ -10,6 +10,7 @@
         public bool? Parallel { get; set; }
         public CoverageFile[] SourceFiles { get; set; }
         public GitData Git { get; set; }
+        public string CommitSha { get; set; }
     }
 
     public sealed class GitData
