@@ -28,14 +28,16 @@ namespace Dotnet.Coveralls.Git
                     ComitterEmail = variables.GetEnvironmentVariable("APPVEYOR_REPO_COMMIT_AUTHOR_EMAIL"),
                     Message = variables.GetEnvironmentVariable("APPVEYOR_REPO_COMMIT_MESSAGE")
                 },
-                Branch = variables.GetEnvironmentVariable("APPVEYOR_REPO_BRANCH")
+                Branch =
+                    variables.GetEnvironmentVariable("APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH") ??
+                    variables.GetEnvironmentVariable("APPVEYOR_REPO_BRANCH")
             };
 
         public Task<CoverallsData> ProvideCoverallsData() => Task.FromResult(new CoverallsData
         {
             ServiceName = "appveryor",
             ServiceJobId = variables.GetEnvironmentVariable("APPVEYOR_JOB_ID"),
-            ServiceNumber = variables.GetEnvironmentVariable("APPVEYOR_BUILD_NUMBER"),
+            ServiceNumber = variables.GetEnvironmentVariable("APPVEYOR_BUILD_VERSION"),
             PullRequestId = variables.GetEnvironmentVariable("APPVEYOR_PULL_REQUEST_NUMBER"),
         });
     }
