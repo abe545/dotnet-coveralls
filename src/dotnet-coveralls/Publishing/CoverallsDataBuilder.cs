@@ -31,7 +31,8 @@ namespace Dotnet.Coveralls.Publishing
                     ServiceJobId = accum.ServiceJobId ?? toAdd.ServiceJobId,
                     ServiceName = accum.ServiceName ?? toAdd.ServiceName,
                     ServiceNumber = accum.ServiceNumber ?? toAdd.ServiceNumber,
-                    SourceFiles = accum.SourceFiles ?? toAdd.SourceFiles
+                    SourceFiles = accum.SourceFiles ?? toAdd.SourceFiles,
+                    CommitSha = accum.CommitSha ?? toAdd.CommitSha,
                 };
         }
     }
