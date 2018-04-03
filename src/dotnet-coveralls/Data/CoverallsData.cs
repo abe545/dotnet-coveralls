@@ -26,7 +26,7 @@
         public string AuthorName { get; set; }
         public string AuthorEmail { get; set; }
         public string CommitterName { get; set; }
-        public string ComitterEmail { get; set; }
+        public string CommitterEmail { get; set; }
         public string Message { get; set; }
     }
 

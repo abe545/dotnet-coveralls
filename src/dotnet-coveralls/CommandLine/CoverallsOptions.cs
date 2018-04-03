@@ -81,7 +81,6 @@ namespace Dotnet.Coveralls.CommandLine
             var parser = new CliParser<CoverallsOptions>(res);
             try
             {
-                //var res = CliParser.Parse<CoverallsOptions>(args);
                 parser.Parse(args);
 
                 if (!(res.OpenCover.SafeAny() ||

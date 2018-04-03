@@ -33,7 +33,7 @@ namespace Dotnet.Coveralls.Publishing
                         Id = accum.Head?.Id ?? toAdd.Head?.Id,
                         AuthorEmail = accum.Head?.AuthorEmail ?? toAdd.Head?.AuthorEmail,
                         AuthorName = accum.Head?.AuthorName ?? toAdd.Head?.AuthorName,
-                        ComitterEmail = accum.Head?.ComitterEmail ?? toAdd.Head?.ComitterEmail,
+                        CommitterEmail = accum.Head?.CommitterEmail ?? toAdd.Head?.CommitterEmail,
                         CommitterName = accum.Head?.CommitterName ?? toAdd.Head?.CommitterName,
                         Message = accum.Head?.Message ?? toAdd.Head?.Message
                     },

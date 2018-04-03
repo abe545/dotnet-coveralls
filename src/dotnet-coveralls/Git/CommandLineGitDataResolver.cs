@@ -23,7 +23,7 @@ namespace Dotnet.Coveralls.Git
                     AuthorName = coverallsOptions.CommitAuthor,
                     AuthorEmail = coverallsOptions.CommitEmail,
                     CommitterName = coverallsOptions.CommitAuthor,
-                    ComitterEmail = coverallsOptions.CommitEmail,
+                    CommitterEmail = coverallsOptions.CommitEmail,
                     Message = coverallsOptions.CommitMessage
                 },
                 Branch = coverallsOptions.CommitBranch,

@@ -25,14 +25,14 @@ namespace Dotnet.Coveralls.Publishing
                 new CoverallsData
                 {
                     Git = accum.Git ?? toAdd.Git,
-                    Parallel = accum.Parallel ?? toAdd.Parallel,
-                    ServicePullRequest = accum.ServicePullRequest ?? toAdd.ServicePullRequest,
-                    RepoToken = accum.RepoToken ?? toAdd.RepoToken,
-                    ServiceJobId = accum.ServiceJobId ?? toAdd.ServiceJobId,
-                    ServiceName = accum.ServiceName ?? toAdd.ServiceName,
-                    ServiceNumber = accum.ServiceNumber ?? toAdd.ServiceNumber,
                     SourceFiles = accum.SourceFiles ?? toAdd.SourceFiles,
-                    ServiceBuildUrl = accum.ServiceBuildUrl ?? toAdd.ServiceBuildUrl,
+                    Parallel = accum.Parallel ?? toAdd.Parallel,
+                    ServicePullRequest = accum.ServicePullRequest.NullIfEmpty() ?? toAdd.ServicePullRequest.NullIfEmpty(),
+                    RepoToken = accum.RepoToken.NullIfEmpty() ?? toAdd.RepoToken.NullIfEmpty(),
+                    ServiceJobId = accum.ServiceJobId.NullIfEmpty() ?? toAdd.ServiceJobId.NullIfEmpty(),
+                    ServiceName = accum.ServiceName.NullIfEmpty() ?? toAdd.ServiceName.NullIfEmpty(),
+                    ServiceNumber = accum.ServiceNumber.NullIfEmpty() ?? toAdd.ServiceNumber.NullIfEmpty(),
+                    ServiceBuildUrl = accum.ServiceBuildUrl.NullIfEmpty() ?? toAdd.ServiceBuildUrl.NullIfEmpty(),
                 };
         }
     }
