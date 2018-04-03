@@ -13,6 +13,8 @@ namespace Dotnet.Coveralls.Tests
 {
     public class Spec
     {
+        protected static Scope DiScope;
+
         protected static (IFileProvider, IFileInfo) CreateMockFileProvider(string fileName)
         {
             var fileInfo = Substitute.For<IFileInfo>();
@@ -25,11 +27,17 @@ namespace Dotnet.Coveralls.Tests
 
         protected static Stream OpenEmbeddedResource(string embeddedResource) =>
             Assembly.GetExecutingAssembly().GetManifestResourceStream($"Dotnet.Coveralls.Tests.{embeddedResource}");
+
+        protected static void Setup(string[] args, Action<Container> containerSetup = null)
+        {
+            DiScope = Di.Setup(args);
+            DiScope.Container.Options.AllowOverridingRegistrations = true;
+            containerSetup?.Invoke(DiScope.Container);
+        }
     }
 
     public class ParserSpec<T> : Spec where T : class, ICoverageParser
     {
-        protected static Scope DiScope;
         protected static T Subject;
         protected static IEnumerable<CoverageFile> ParsedFiles;
         protected static IFileInfo FileInfo;
@@ -40,11 +48,11 @@ namespace Dotnet.Coveralls.Tests
             var (fileProvider, fileInfo) = CreateMockFileProvider(coverageFileName);
             FileInfo = fileInfo;
 
-            DiScope = Di.Setup(args);
-            DiScope.Container.Options.AllowOverridingRegistrations = true;
-            DiScope.Container.Register(() => fileProvider);
-            containerSetup?.Invoke(DiScope.Container);
-
+            Setup(args, c =>
+            {
+                c.Register(() => fileProvider);
+                containerSetup?.Invoke(c);
+            });
             Subject = DiScope.Container.GetInstance<T>();
         }
 
