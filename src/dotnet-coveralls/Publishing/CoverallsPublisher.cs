@@ -56,7 +56,7 @@ namespace Dotnet.Coveralls.Publishing
                 {
                     throw new PublishCoverallsException("No coveralls token specified. Either pass it with --repo-token or set it in the Environment Variable 'COVERALLS_REPO_TOKEN'.");
                 }
-                await UploadCoverage(SerializeCoverallsData());
+                await UploadCoverage();
                 data.RepoToken = "***";
                 logger.LogInformation(SerializeCoverallsData());
             }
@@ -66,69 +66,51 @@ namespace Dotnet.Coveralls.Publishing
             string SerializeCoverallsData() => JsonConvert.SerializeObject(
                 data,
                 new JsonSerializerSettings { ContractResolver = contractResolver, DefaultValueHandling = DefaultValueHandling.Ignore });
-        }
 
-        private  async Task UploadCoverage(string fileData)
-        {
-            var uploadResult = await Upload();
-            if (!uploadResult.Success)
-            {
-                var message = $"Failed to upload to coveralls:{Environment.NewLine}{uploadResult.Response}";
-                if (options.IgnoreUploadErrors)
-                {
-                    logger.LogWarning(message);
-                }
-                else
-                {
-                    throw new PublishCoverallsException(message);
-                }
-            }
-            else
-            {
-                logger.LogInformation("Coverage data uploaded to coveralls.");
-
-                if (!string.IsNullOrWhiteSpace(uploadResult.Response))
-                {
-                    logger.LogInformation(uploadResult.Response);
-                }
-            }
-
-            async Task<(bool Success, string Response)> Upload()
+            async Task UploadCoverage()
             {
                 try
                 {
-                    var response = await CoverallsEndpoint.PostMultipartAsync(content => content.AddString("json_file", fileData));
-                    return (response.IsSuccessStatusCode, $"{response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+                    var response = await CoverallsEndpoint.PostMultipartAsync(content => content.AddJson("json_file", data));
+                    var result = await response.Content.ReadAsStringAsync();
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        var message = $"Failed to upload to coveralls:{Environment.NewLine}{response.StatusCode}: {result}";
+                        if (options.IgnoreUploadErrors)
+                        {
+                            logger.LogWarning(message);
+                        }
+                        else
+                        {
+                            throw new PublishCoverallsException(message);
+                        }
+                    }
+                    else
+                    {
+                        logger.LogInformation("Coverage data uploaded to coveralls.");
+
+                        if (!string.IsNullOrWhiteSpace(result))
+                        {
+                            logger.LogInformation(result);
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
-                    return (false, ex.ToString());
+                    var message = $"Failed to upload to coveralls:{Environment.NewLine}{ex.ToString()}";
+                    if (options.IgnoreUploadErrors)
+                    {
+                        logger.LogWarning(message);
+                    }
+                    else
+                    {
+                        throw new PublishCoverallsException(message);
+                    }
                 }
-                //using (var stringContent = new StringContent(fileData))
-                //using (var client = new HttpClient())
-                //using (var formData = new MultipartFormDataContent())
-                //{
-                //    formData.Add(stringContent, "json_file", "coverage.json");
-
-                //    var response = await client.PostAsync("https://coveralls.io/api/v1/jobs", formData);
-
-                //    if (!response.IsSuccessStatusCode)
-                //    {
-                //        var content = await response.Content.ReadAsStringAsync();
-                //        var message = JsonConvert.DeserializeObject<CoverallsResponse>(content).message;
-
-                //        if (message.Length > 200)
-                //        {
-                //            message = message.Substring(0, 200);
-                //        }
-
-                //        return (false, $"{response.StatusCode} - {message}");
-                //    }
-                //    return (true, null);
-                //}
             }
         }
-
+        
         private class CoverallsResponse
         {
             public string message { get; set; }
