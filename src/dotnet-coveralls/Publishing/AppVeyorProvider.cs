@@ -57,7 +57,7 @@ namespace Dotnet.Coveralls.Git
 
         public Task<CoverallsData> ProvideCoverallsData() => Task.FromResult(new CoverallsData
         {
-            ServiceName = nameof(AppVeyor).ToLower(),
+           // ServiceName = nameof(AppVeyor).ToLower(),
             ServiceJobId = variables.GetEnvironmentVariable(AppVeyor.JOB_ID),
             ServiceNumber = variables.GetEnvironmentVariable(AppVeyor.BUILD_NUMBER),
             ServicePullRequest = variables.GetEnvironmentVariable(AppVeyor.PR_NUMBER),
