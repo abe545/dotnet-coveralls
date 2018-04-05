@@ -11,6 +11,7 @@ using Newtonsoft.Json.Serialization;
 using Flurl;
 using Flurl.Http;
 using System.IO;
+using System.Text;
 
 namespace Dotnet.Coveralls.Publishing
 {
@@ -73,37 +74,32 @@ namespace Dotnet.Coveralls.Publishing
                 try
                 {
                     var fileData = SerializeCoverallsData();
-                    var stream = new MemoryStream(fileData.Length * 2);
-                    using (var streamWriter = new StreamWriter(stream))
+                    var stream = new MemoryStream(Encoding.Unicode.GetBytes(fileData));
+                    var response = await CoverallsEndpoint.PostMultipartAsync(content => content.AddFile("json_file", stream, "coverage.json"));
+                    var result = await response.Content.ReadAsStringAsync();
+
+                    if (!response.IsSuccessStatusCode)
                     {
-                        await streamWriter.WriteAsync(fileData);
-                        stream.Seek(0, SeekOrigin.Begin);
-
-                        var response = await CoverallsEndpoint.PostMultipartAsync(content => content.AddFile("json_file", stream, "coverage.json"));
-                        var result = await response.Content.ReadAsStringAsync();
-
-                        if (!response.IsSuccessStatusCode)
+                        var message = $"Failed to upload to coveralls:{Environment.NewLine}{response.StatusCode}: {result}";
+                        if (options.IgnoreUploadErrors)
                         {
-                            var message = $"Failed to upload to coveralls:{Environment.NewLine}{response.StatusCode}: {result}";
-                            if (options.IgnoreUploadErrors)
-                            {
-                                logger.LogWarning(message);
-                            }
-                            else
-                            {
-                                throw new PublishCoverallsException(message);
-                            }
+                            logger.LogWarning(message);
                         }
                         else
                         {
-                            logger.LogInformation("Coverage data uploaded to coveralls.");
-
-                            if (!string.IsNullOrWhiteSpace(result))
-                            {
-                                logger.LogInformation(result);
-                            }
+                            throw new PublishCoverallsException(message);
                         }
                     }
+                    else
+                    {
+                        logger.LogInformation("Coverage data uploaded to coveralls.");
+
+                        if (!string.IsNullOrWhiteSpace(result))
+                        {
+                            logger.LogInformation(result);
+                        }
+                    }
+                    
                 }
                 catch (Exception ex)
                 {
