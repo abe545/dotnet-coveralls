@@ -8,6 +8,8 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using Flurl;
+using Flurl.Http;
 
 namespace Dotnet.Coveralls.Publishing
 {
@@ -19,6 +21,7 @@ namespace Dotnet.Coveralls.Publishing
         private readonly IFileProvider fileProvider;
         private readonly IEnvironmentVariables environmentVariables;
         private readonly ILogger<CoverallsPublisher> logger;
+        private const string CoverallsEndpoint = "https://coveralls.io/api/v1/jobs";
 
         public CoverallsPublisher(
             CoverallsOptions options,
@@ -70,7 +73,7 @@ namespace Dotnet.Coveralls.Publishing
             var uploadResult = await Upload();
             if (!uploadResult.Success)
             {
-                var message = $"Failed to upload to coveralls:{Environment.NewLine}{uploadResult.Error}";
+                var message = $"Failed to upload to coveralls:{Environment.NewLine}{uploadResult.Response}";
                 if (options.IgnoreUploadErrors)
                 {
                     logger.LogWarning(message);
@@ -83,32 +86,46 @@ namespace Dotnet.Coveralls.Publishing
             else
             {
                 logger.LogInformation("Coverage data uploaded to coveralls.");
+
+                if (!string.IsNullOrWhiteSpace(uploadResult.Response))
+                {
+                    logger.LogInformation(uploadResult.Response);
+                }
             }
 
-            async Task<(bool Success, string Error)> Upload()
+            async Task<(bool Success, string Response)> Upload()
             {
-                using (var stringContent = new StringContent(fileData))
-                using (var client = new HttpClient())
-                using (var formData = new MultipartFormDataContent())
+                try
                 {
-                    formData.Add(stringContent, "json_file", "coverage.json");
-
-                    var response = await client.PostAsync("https://coveralls.io/api/v1/jobs", formData);
-
-                    if (!response.IsSuccessStatusCode)
-                    {
-                        var content = await response.Content.ReadAsStringAsync();
-                        var message = JsonConvert.DeserializeObject<CoverallsResponse>(content).message;
-
-                        if (message.Length > 200)
-                        {
-                            message = message.Substring(0, 200);
-                        }
-
-                        return (false, $"{response.StatusCode} - {message}");
-                    }
-                    return (true, null);
+                    var response = await CoverallsEndpoint.PostMultipartAsync(content => content.AddString("json_file", fileData));
+                    return (response.IsSuccessStatusCode, $"{response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
                 }
+                catch (Exception ex)
+                {
+                    return (false, ex.ToString());
+                }
+                //using (var stringContent = new StringContent(fileData))
+                //using (var client = new HttpClient())
+                //using (var formData = new MultipartFormDataContent())
+                //{
+                //    formData.Add(stringContent, "json_file", "coverage.json");
+
+                //    var response = await client.PostAsync("https://coveralls.io/api/v1/jobs", formData);
+
+                //    if (!response.IsSuccessStatusCode)
+                //    {
+                //        var content = await response.Content.ReadAsStringAsync();
+                //        var message = JsonConvert.DeserializeObject<CoverallsResponse>(content).message;
+
+                //        if (message.Length > 200)
+                //        {
+                //            message = message.Substring(0, 200);
+                //        }
+
+                //        return (false, $"{response.StatusCode} - {message}");
+                //    }
+                //    return (true, null);
+                //}
             }
         }
 
