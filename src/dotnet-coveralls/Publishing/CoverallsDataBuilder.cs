@@ -30,6 +30,7 @@ namespace Dotnet.Coveralls.Publishing
                     Parallel = accum.Parallel ?? toAdd.Parallel,
                     ServicePullRequest = accum.ServicePullRequest.NullIfEmpty() ?? toAdd.ServicePullRequest.NullIfEmpty(),
                     RepoToken = accum.RepoToken.NullIfEmpty() ?? toAdd.RepoToken.NullIfEmpty(),
+                    ServiceBranch = accum.ServiceBranch.NullIfEmpty() ?? toAdd.ServiceBranch.NullIfEmpty(),
                     ServiceJobId = accum.ServiceJobId.NullIfEmpty() ?? toAdd.ServiceJobId.NullIfEmpty(),
                     ServiceName = accum.ServiceName.NullIfEmpty() ?? toAdd.ServiceName.NullIfEmpty(),
                     ServiceNumber = accum.ServiceNumber.NullIfEmpty() ?? toAdd.ServiceNumber.NullIfEmpty(),

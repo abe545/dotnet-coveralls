@@ -62,7 +62,6 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
     [Subject(typeof(AppVeyorProvider))]
     public class when_appveyor_available : when_ci_environment_variables_available
     {
-        protected const string AppVeyorBuildNumber = "2";
         protected const string SomeBuildVersion = "number-two";
         protected const string SomeCommitAuthor = "Spock";
         protected const string SomeCommitEmail = "Spock@starfleet.gov";
@@ -77,7 +76,6 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
             var environment = DiScope.Container.GetInstance<IEnvironmentVariables>();
 
             environment.GetEnvironmentVariable(nameof(AppVeyorProvider.AppVeyor).ToUpper()).Returns("true");
-            environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.BUILD_NUMBER).Returns(AppVeyorBuildNumber);
             environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.BUILD_VERSION).Returns(SomeBuildVersion);
             environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.COMMIT_AUTHOR).Returns(SomeCommitAuthor);
             environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.COMMIT_BRANCH).Returns(AppVeyorBranch);
@@ -90,34 +88,34 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
 
         It should_set_service_name = () => CoverallsData.ServiceName.ShouldBe(nameof(AppVeyorProvider.AppVeyor).ToLower());
         It should_set_service_job_id = () => CoverallsData.ServiceJobId.ShouldBe(SomeJobId);
-        It should_set_service_number = () => CoverallsData.ServiceNumber.ShouldBe(AppVeyorBuildNumber);
+        It should_set_service_number = () => CoverallsData.ServiceNumber.ShouldBe(SomeBuildVersion);
         It should_set_service_build_url = () => CoverallsData.ServiceBuildUrl.ShouldBe($"https://ci.appveyor.com/project/{SomeRepoName}/build/{SomeBuildVersion}");
         It should_set_commit_sha = () => CoverallsData.CommitSha.ShouldBe(SomeCommitId);
-        //It should_set_commit_id = () => CoverallsData.Git.Head.Id.ShouldBe(SomeCommitId);
-        //It should_set_author_name = () => CoverallsData.Git.Head.AuthorName.ShouldBe(SomeCommitAuthor);
-        //It should_set_autohr_email = () => CoverallsData.Git.Head.AuthorEmail.ShouldBe(SomeCommitEmail);
-        //It should_set_committer_name = () => CoverallsData.Git.Head.CommitterName.ShouldBe(SomeCommitAuthor);
-        //It should_set_committer_email = () => CoverallsData.Git.Head.CommitterEmail.ShouldBe(SomeCommitEmail);
-        //It should_set_commit_message = () => CoverallsData.Git.Head.Message.ShouldBe(SomeCommitMessage);
-        //It should_set_the_branch = () => CoverallsData.Git.Branch.ShouldBe(AppVeyorBranch);
-        //It should_not_set_pr = () => CoverallsData.ServicePullRequest.ShouldBeNull();
+        It should_set_commit_id = () => CoverallsData.Git.Head.Id.ShouldBe(SomeCommitId);
+        It should_set_author_name = () => CoverallsData.Git.Head.AuthorName.ShouldBe(SomeCommitAuthor);
+        It should_set_autohr_email = () => CoverallsData.Git.Head.AuthorEmail.ShouldBe(SomeCommitEmail);
+        It should_set_committer_name = () => CoverallsData.Git.Head.CommitterName.ShouldBe(SomeCommitAuthor);
+        It should_set_committer_email = () => CoverallsData.Git.Head.CommitterEmail.ShouldBe(SomeCommitEmail);
+        It should_set_commit_message = () => CoverallsData.Git.Head.Message.ShouldBe(SomeCommitMessage);
+        It should_set_the_branch = () => CoverallsData.Git.Branch.ShouldBe(AppVeyorBranch);
+        It should_not_set_pr = () => CoverallsData.ServicePullRequest.ShouldBeNull();
     }
 
-    //[Subject(typeof(AppVeyorProvider))]
-    //public class when_parsing_pr_and_when_appveyor_available : when_appveyor_available
-    //{
-    //    protected const string SomePullRequestCommitId = "09871a";
-    //    protected const string SomePullRequestNumber = "18";
+    [Subject(typeof(AppVeyorProvider))]
+    public class when_parsing_pr_and_when_appveyor_available : when_appveyor_available
+    {
+        protected const string SomePullRequestCommitId = "09871a";
+        protected const string SomePullRequestNumber = "18";
 
-    //    Establish context = () =>
-    //    {
-    //        var environment = DiScope.Container.GetInstance<IEnvironmentVariables>();
+        Establish context = () =>
+        {
+            var environment = DiScope.Container.GetInstance<IEnvironmentVariables>();
 
-    //        environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.PR_COMMIT_ID).Returns(SomePullRequestCommitId);
-    //        environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.PR_NUMBER).Returns(SomePullRequestNumber);
-    //    };
+            environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.PR_COMMIT_ID).Returns(SomePullRequestCommitId);
+            environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.PR_NUMBER).Returns(SomePullRequestNumber);
+        };
 
-    //    It should_set_commit_id_to_pr_commit_id = () => CoverallsData.Git.Head.Id.ShouldBe(SomePullRequestCommitId);
-    //    It should_set_pull_request = () => CoverallsData.ServicePullRequest.ShouldBe(SomePullRequestNumber);
-    //}
+        It should_set_commit_id_to_pr_commit_id = () => CoverallsData.Git.Head.Id.ShouldBe(SomePullRequestCommitId);
+        It should_set_pull_request = () => CoverallsData.ServicePullRequest.ShouldBe(SomePullRequestNumber);
+    }
 }
