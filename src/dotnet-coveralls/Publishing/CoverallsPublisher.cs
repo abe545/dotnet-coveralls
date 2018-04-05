@@ -79,9 +79,6 @@ namespace Dotnet.Coveralls.Publishing
                     {
                         formData.Add(stringContent, "json_file", "coverage.json");
                         var response = await CoverallsEndpoint.PostAsync(formData);
-
-                        //var stream = new MemoryStream(Encoding.Unicode.GetBytes(fileData));
-                        //var response = await CoverallsEndpoint.PostMultipartAsync(content => content.Add("json_file", stringContent));
                         var result = await response.Content.ReadAsStringAsync();
 
                         if (!response.IsSuccessStatusCode)

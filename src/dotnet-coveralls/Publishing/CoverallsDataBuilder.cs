@@ -24,6 +24,7 @@ namespace Dotnet.Coveralls.Publishing
             CoverallsData CombineData(CoverallsData accum, CoverallsData toAdd) =>
                 new CoverallsData
                 {
+                    CommitSha = accum.CommitSha ?? toAdd.CommitSha.NullIfEmpty(),
                     Git = accum.Git ?? toAdd.Git,
                     SourceFiles = accum.SourceFiles ?? toAdd.SourceFiles,
                     Parallel = accum.Parallel ?? toAdd.Parallel,

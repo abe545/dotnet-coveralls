@@ -37,26 +37,27 @@ namespace Dotnet.Coveralls.Git
 
         public bool CanProvideData => bool.TryParse(variables.GetEnvironmentVariable(nameof(AppVeyor).ToUpper()), out var value) && value;
 
-        public GitData GitData =>
-            new GitData
-            {
-                Head = new GitHead
-                {
-                    Id =
-                        variables.GetEnvironmentVariable(AppVeyor.PR_COMMIT_ID).NullIfEmpty() ??
-                        variables.GetEnvironmentVariable(AppVeyor.COMMIT_ID),
-                    AuthorName = variables.GetEnvironmentVariable(AppVeyor.COMMIT_AUTHOR),
-                    AuthorEmail = variables.GetEnvironmentVariable(AppVeyor.COMMIT_EMAIL),
-                    CommitterName = variables.GetEnvironmentVariable(AppVeyor.COMMIT_AUTHOR),
-                    CommitterEmail = variables.GetEnvironmentVariable(AppVeyor.COMMIT_EMAIL),
-                    Message = variables.GetEnvironmentVariable(AppVeyor.COMMIT_MESSAGE)
-                },
-                Branch = variables.GetEnvironmentVariable(AppVeyor.COMMIT_BRANCH),
-                Remotes = Remotes.ToArray(),
-            };
+        public GitData GitData => new GitData();
+            //new GitData
+            //{
+            //    Head = new GitHead
+            //    {
+            //        Id =
+            //            variables.GetEnvironmentVariable(AppVeyor.PR_COMMIT_ID).NullIfEmpty() ??
+            //            variables.GetEnvironmentVariable(AppVeyor.COMMIT_ID),
+            //        AuthorName = variables.GetEnvironmentVariable(AppVeyor.COMMIT_AUTHOR),
+            //        AuthorEmail = variables.GetEnvironmentVariable(AppVeyor.COMMIT_EMAIL),
+            //        CommitterName = variables.GetEnvironmentVariable(AppVeyor.COMMIT_AUTHOR),
+            //        CommitterEmail = variables.GetEnvironmentVariable(AppVeyor.COMMIT_EMAIL),
+            //        Message = variables.GetEnvironmentVariable(AppVeyor.COMMIT_MESSAGE)
+            //    },
+            //    Branch = variables.GetEnvironmentVariable(AppVeyor.COMMIT_BRANCH),
+            //    Remotes = Remotes.ToArray(),
+            //};
 
         public Task<CoverallsData> ProvideCoverallsData() => Task.FromResult(new CoverallsData
         {
+            CommitSha = variables.GetEnvironmentVariable(AppVeyor.COMMIT_ID),
             ServiceName = nameof(AppVeyor).ToLower(),
             ServiceJobId = variables.GetEnvironmentVariable(AppVeyor.JOB_ID),
             ServiceNumber = variables.GetEnvironmentVariable(AppVeyor.BUILD_NUMBER),

@@ -2,6 +2,7 @@
 {
     public sealed class CoverallsData
     {
+        public string CommitSha { get; set; }
         public string RepoToken { get; set; }
         public string ServiceJobId { get; set; }
         public string ServiceName { get; set; }
