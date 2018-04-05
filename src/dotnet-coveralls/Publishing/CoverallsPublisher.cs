@@ -54,6 +54,8 @@ namespace Dotnet.Coveralls.Publishing
                     throw new PublishCoverallsException("No coveralls token specified. Either pass it with --repo-token or set it in the Environment Variable 'COVERALLS_REPO_TOKEN'.");
                 }
                 await UploadCoverage(SerializeCoverallsData());
+                data.RepoToken = "***";
+                logger.LogInformation(SerializeCoverallsData());
             }
 
             return 0;

@@ -88,7 +88,7 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
             environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.REPO_NAME).Returns(SomeRepoName);
         };
 
-        //It should_set_service_name = () => CoverallsData.ServiceName.ShouldBe(nameof(AppVeyorProvider.AppVeyor).ToLower());
+        It should_set_service_name = () => CoverallsData.ServiceName.ShouldBe(nameof(AppVeyorProvider.AppVeyor).ToLower());
         It should_set_service_job_id = () => CoverallsData.ServiceJobId.ShouldBe(SomeJobId);
         It should_set_service_number = () => CoverallsData.ServiceNumber.ShouldBe(AppVeyorBuildNumber);
         It should_set_service_build_url = () => CoverallsData.ServiceBuildUrl.ShouldBe($"https://ci.appveyor.com/project/{SomeRepoName}/build/{SomeBuildVersion}");
