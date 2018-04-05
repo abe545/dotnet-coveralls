@@ -74,32 +74,38 @@ namespace Dotnet.Coveralls.Publishing
                 try
                 {
                     var fileData = SerializeCoverallsData();
-                    var stream = new MemoryStream(Encoding.Unicode.GetBytes(fileData));
-                    var response = await CoverallsEndpoint.PostMultipartAsync(content => content.AddFile("json_file", stream, "coverage.json"));
-                    var result = await response.Content.ReadAsStringAsync();
-
-                    if (!response.IsSuccessStatusCode)
+                    using (var stringContent = new StringContent(fileData))
+                    using (var formData = new MultipartFormDataContent())
                     {
-                        var message = $"Failed to upload to coveralls:{Environment.NewLine}{response.StatusCode}: {result}";
-                        if (options.IgnoreUploadErrors)
+                        formData.Add(stringContent, "json_file", "coverage.json");
+                        var response = await CoverallsEndpoint.PostAsync(formData);
+
+                        //var stream = new MemoryStream(Encoding.Unicode.GetBytes(fileData));
+                        //var response = await CoverallsEndpoint.PostMultipartAsync(content => content.Add("json_file", stringContent));
+                        var result = await response.Content.ReadAsStringAsync();
+
+                        if (!response.IsSuccessStatusCode)
                         {
-                            logger.LogWarning(message);
+                            var message = $"Failed to upload to coveralls:{Environment.NewLine}{response.StatusCode}: {result}";
+                            if (options.IgnoreUploadErrors)
+                            {
+                                logger.LogWarning(message);
+                            }
+                            else
+                            {
+                                throw new PublishCoverallsException(message);
+                            }
                         }
                         else
                         {
-                            throw new PublishCoverallsException(message);
-                        }
-                    }
-                    else
-                    {
-                        logger.LogInformation("Coverage data uploaded to coveralls.");
+                            logger.LogInformation("Coverage data uploaded to coveralls.");
 
-                        if (!string.IsNullOrWhiteSpace(result))
-                        {
-                            logger.LogInformation(result);
+                            if (!string.IsNullOrWhiteSpace(result))
+                            {
+                                logger.LogInformation(result);
+                            }
                         }
                     }
-                    
                 }
                 catch (Exception ex)
                 {
