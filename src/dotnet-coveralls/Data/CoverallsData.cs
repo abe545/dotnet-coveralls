@@ -2,11 +2,13 @@
 {
     public sealed class CoverallsData
     {
+        public string CommitSha { get; set; }
         public string RepoToken { get; set; }
         public string ServiceJobId { get; set; }
         public string ServiceName { get; set; }
         public string ServiceBuildUrl { get; set; }
         public string ServiceNumber { get; set; }
+        public string ServiceBranch { get; set; }
         public string ServicePullRequest { get; set; }
         public bool? Parallel { get; set; }
         public CoverageFile[] SourceFiles { get; set; }

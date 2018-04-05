@@ -21,8 +21,6 @@ namespace Dotnet.Coveralls.Git
             public const string COMMIT_MESSAGE = "APPVEYOR_REPO_COMMIT_MESSAGE";
             public const string COMMIT_BRANCH = "APPVEYOR_REPO_BRANCH";
             public const string JOB_ID = "APPVEYOR_JOB_ID";
-
-            public const string BUILD_NUMBER = "APPVEYOR_BUILD_NUMBER";
             public const string BUILD_VERSION = "APPVEYOR_BUILD_VERSION";
 
             public const string PR_COMMIT_ID = "APPVEYOR_PULL_REQUEST_HEAD_COMMIT";
@@ -57,9 +55,11 @@ namespace Dotnet.Coveralls.Git
 
         public Task<CoverallsData> ProvideCoverallsData() => Task.FromResult(new CoverallsData
         {
+            CommitSha = variables.GetEnvironmentVariable(AppVeyor.COMMIT_ID),
+            ServiceBranch = variables.GetEnvironmentVariable(AppVeyor.COMMIT_BRANCH),
             ServiceName = nameof(AppVeyor).ToLower(),
             ServiceJobId = variables.GetEnvironmentVariable(AppVeyor.JOB_ID),
-            ServiceNumber = variables.GetEnvironmentVariable(AppVeyor.BUILD_NUMBER),
+            ServiceNumber = variables.GetEnvironmentVariable(AppVeyor.BUILD_VERSION),
             ServicePullRequest = variables.GetEnvironmentVariable(AppVeyor.PR_NUMBER),
             ServiceBuildUrl = $"https://ci.appveyor.com/project/{variables.GetEnvironmentVariable(AppVeyor.REPO_NAME)}/build/{variables.GetEnvironmentVariable(AppVeyor.BUILD_VERSION)}",
         });

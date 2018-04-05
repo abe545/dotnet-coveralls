@@ -8,6 +8,10 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using Flurl;
+using Flurl.Http;
+using System.IO;
+using System.Text;
 
 namespace Dotnet.Coveralls.Publishing
 {
@@ -19,6 +23,7 @@ namespace Dotnet.Coveralls.Publishing
         private readonly IFileProvider fileProvider;
         private readonly IEnvironmentVariables environmentVariables;
         private readonly ILogger<CoverallsPublisher> logger;
+        private const string CoverallsEndpoint = "https://coveralls.io/api/v1/jobs";
 
         public CoverallsPublisher(
             CoverallsOptions options,
@@ -53,7 +58,9 @@ namespace Dotnet.Coveralls.Publishing
                 {
                     throw new PublishCoverallsException("No coveralls token specified. Either pass it with --repo-token or set it in the Environment Variable 'COVERALLS_REPO_TOKEN'.");
                 }
-                await UploadCoverage(SerializeCoverallsData());
+                await UploadCoverage();
+                data.RepoToken = "***";
+                logger.LogInformation(SerializeCoverallsData());
             }
 
             return 0;
@@ -61,55 +68,57 @@ namespace Dotnet.Coveralls.Publishing
             string SerializeCoverallsData() => JsonConvert.SerializeObject(
                 data,
                 new JsonSerializerSettings { ContractResolver = contractResolver, DefaultValueHandling = DefaultValueHandling.Ignore });
-        }
 
-        private  async Task UploadCoverage(string fileData)
-        {
-            var uploadResult = await Upload();
-            if (!uploadResult.Success)
+            async Task UploadCoverage()
             {
-                var message = $"Failed to upload to coveralls:{Environment.NewLine}{uploadResult.Error}";
-                if (options.IgnoreUploadErrors)
+                try
                 {
-                    logger.LogWarning(message);
-                }
-                else
-                {
-                    throw new PublishCoverallsException(message);
-                }
-            }
-            else
-            {
-                logger.LogInformation("Coverage data uploaded to coveralls.");
-            }
-
-            async Task<(bool Success, string Error)> Upload()
-            {
-                using (var stringContent = new StringContent(fileData))
-                using (var client = new HttpClient())
-                using (var formData = new MultipartFormDataContent())
-                {
-                    formData.Add(stringContent, "json_file", "coverage.json");
-
-                    var response = await client.PostAsync("https://coveralls.io/api/v1/jobs", formData);
-
-                    if (!response.IsSuccessStatusCode)
+                    var fileData = SerializeCoverallsData();
+                    using (var stringContent = new StringContent(fileData))
+                    using (var formData = new MultipartFormDataContent())
                     {
-                        var content = await response.Content.ReadAsStringAsync();
-                        var message = JsonConvert.DeserializeObject<CoverallsResponse>(content).message;
+                        formData.Add(stringContent, "json_file", "coverage.json");
+                        var response = await CoverallsEndpoint.PostAsync(formData);
+                        var result = await response.Content.ReadAsStringAsync();
 
-                        if (message.Length > 200)
+                        if (!response.IsSuccessStatusCode)
                         {
-                            message = message.Substring(0, 200);
+                            var message = $"Failed to upload to coveralls:{Environment.NewLine}{response.StatusCode}: {result}";
+                            if (options.IgnoreUploadErrors)
+                            {
+                                logger.LogWarning(message);
+                            }
+                            else
+                            {
+                                throw new PublishCoverallsException(message);
+                            }
                         }
+                        else
+                        {
+                            logger.LogInformation("Coverage data uploaded to coveralls.");
 
-                        return (false, $"{response.StatusCode} - {message}");
+                            if (!string.IsNullOrWhiteSpace(result))
+                            {
+                                logger.LogInformation(result);
+                            }
+                        }
                     }
-                    return (true, null);
+                }
+                catch (Exception ex)
+                {
+                    var message = $"Failed to upload to coveralls:{Environment.NewLine}{ex.ToString()}";
+                    if (options.IgnoreUploadErrors)
+                    {
+                        logger.LogWarning(message);
+                    }
+                    else
+                    {
+                        throw new PublishCoverallsException(message);
+                    }
                 }
             }
         }
-
+        
         private class CoverallsResponse
         {
             public string message { get; set; }
