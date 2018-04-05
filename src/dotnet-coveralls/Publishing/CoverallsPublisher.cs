@@ -73,7 +73,7 @@ namespace Dotnet.Coveralls.Publishing
                 try
                 {
                     var fileData = SerializeCoverallsData();
-                    using (var stream = new MemoryStream(fileData.Length * 2))
+                    var stream = new MemoryStream(fileData.Length * 2);
                     using (var streamWriter = new StreamWriter(stream))
                     {
                         await streamWriter.WriteAsync(fileData);
