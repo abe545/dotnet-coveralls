@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using Dotnet.Coveralls.Adapters;
 using Dotnet.Coveralls.Data;
 using Dotnet.Coveralls.Git;
 using Dotnet.Coveralls.Io;
@@ -28,25 +29,18 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
             Setup(new[] { "--lcov", "dummy" }, c =>
             {
                 c.RegisterCollection(typeof(ICoverageParser), Enumerable.Empty<Type>());
+                c.Register(() => Substitute.For<IEnvironmentVariables>());
                 c.RegisterInstance(Substitute.For<ProcessExecutor>());
             });
 
             DiScope.Container.GetInstance<ProcessExecutor>().Execute(Arg.Any<ProcessStartInfo>()).Returns((null, "none", 1));
-            
-            Environment.SetEnvironmentVariable(EnvironmentVariablesProvider.CI.BUILD_NUMBER, SomeBuildNumber);
-            Environment.SetEnvironmentVariable(EnvironmentVariablesProvider.CI.BRANCH, SomeBranch);
-            Environment.SetEnvironmentVariable(EnvironmentVariablesProvider.CI.BUILD_URL, SomeBuildUrl);
-            Environment.SetEnvironmentVariable(EnvironmentVariablesProvider.CI.NAME, SomeServiceName);
-            Environment.SetEnvironmentVariable(EnvironmentVariablesProvider.CI.REPO_TOKEN, SomeCoverallsToken);
-        };
+            var environment = DiScope.Container.GetInstance<IEnvironmentVariables>();
 
-        Cleanup after = () =>
-        {
-            Environment.SetEnvironmentVariable(EnvironmentVariablesProvider.CI.BUILD_NUMBER, null);
-            Environment.SetEnvironmentVariable(EnvironmentVariablesProvider.CI.BRANCH, null);
-            Environment.SetEnvironmentVariable(EnvironmentVariablesProvider.CI.BUILD_URL, null);
-            Environment.SetEnvironmentVariable(EnvironmentVariablesProvider.CI.NAME, null);
-            Environment.SetEnvironmentVariable(EnvironmentVariablesProvider.CI.REPO_TOKEN, null);
+            environment.GetEnvironmentVariable(EnvironmentVariablesProvider.CI.BUILD_NUMBER).Returns(SomeBuildNumber);
+            environment.GetEnvironmentVariable(EnvironmentVariablesProvider.CI.BRANCH).Returns(SomeBranch);
+            environment.GetEnvironmentVariable(EnvironmentVariablesProvider.CI.BUILD_URL).Returns(SomeBuildUrl);
+            environment.GetEnvironmentVariable(EnvironmentVariablesProvider.CI.NAME).Returns(SomeServiceName);
+            environment.GetEnvironmentVariable(EnvironmentVariablesProvider.CI.REPO_TOKEN).Returns(SomeCoverallsToken);
         };
 
         Because of = () => CoverallsData = DiScope.Container.GetInstance<ICoverallsDataBuilder>().ProvideCoverallsData().Result;
@@ -64,8 +58,7 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
     {
         protected static string SomePullRequestNumber = "17";
 
-        Establish context = () => Environment.SetEnvironmentVariable(EnvironmentVariablesProvider.CI.PULL_REQUEST, SomePullRequestNumber);
-        Cleanup after = () => Environment.SetEnvironmentVariable(EnvironmentVariablesProvider.CI.PULL_REQUEST, null);
+        Establish context = () => DiScope.Container.GetInstance<IEnvironmentVariables>().GetEnvironmentVariable(EnvironmentVariablesProvider.CI.PULL_REQUEST).Returns(SomePullRequestNumber);
 
         It should_set_pull_request = () => CoverallsData.ServicePullRequest.ShouldBe(SomePullRequestNumber);
     }
@@ -84,28 +77,17 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
 
         Establish context = () =>
         {
-            Environment.SetEnvironmentVariable(nameof(AppVeyorProvider.AppVeyor).ToUpper(), "true");
-            Environment.SetEnvironmentVariable(AppVeyorProvider.AppVeyor.BUILD_VERSION, SomeBuildVersion);
-            Environment.SetEnvironmentVariable(AppVeyorProvider.AppVeyor.COMMIT_AUTHOR, SomeCommitAuthor);
-            Environment.SetEnvironmentVariable(AppVeyorProvider.AppVeyor.COMMIT_BRANCH, AppVeyorBranch);
-            Environment.SetEnvironmentVariable(AppVeyorProvider.AppVeyor.COMMIT_EMAIL, SomeCommitEmail);
-            Environment.SetEnvironmentVariable(AppVeyorProvider.AppVeyor.COMMIT_ID, SomeCommitId);
-            Environment.SetEnvironmentVariable(AppVeyorProvider.AppVeyor.COMMIT_MESSAGE, SomeCommitMessage);
-            Environment.SetEnvironmentVariable(AppVeyorProvider.AppVeyor.JOB_ID, SomeJobId);
-            Environment.SetEnvironmentVariable(AppVeyorProvider.AppVeyor.REPO_NAME, SomeRepoName);
-        };
+            var environment = DiScope.Container.GetInstance<IEnvironmentVariables>();
 
-        Cleanup after = () =>
-        {
-            Environment.SetEnvironmentVariable(nameof(AppVeyorProvider.AppVeyor).ToUpper(), null);
-            Environment.SetEnvironmentVariable(AppVeyorProvider.AppVeyor.BUILD_VERSION, null);
-            Environment.SetEnvironmentVariable(AppVeyorProvider.AppVeyor.COMMIT_AUTHOR, null);
-            Environment.SetEnvironmentVariable(AppVeyorProvider.AppVeyor.COMMIT_BRANCH, null);
-            Environment.SetEnvironmentVariable(AppVeyorProvider.AppVeyor.COMMIT_EMAIL, null);
-            Environment.SetEnvironmentVariable(AppVeyorProvider.AppVeyor.COMMIT_ID, null);
-            Environment.SetEnvironmentVariable(AppVeyorProvider.AppVeyor.COMMIT_MESSAGE, null);
-            Environment.SetEnvironmentVariable(AppVeyorProvider.AppVeyor.JOB_ID, null);
-            Environment.SetEnvironmentVariable(AppVeyorProvider.AppVeyor.REPO_NAME, null);
+            environment.GetEnvironmentVariable(nameof(AppVeyorProvider.AppVeyor).ToUpper()).Returns("true");
+            environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.BUILD_VERSION).Returns(SomeBuildVersion);
+            environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.COMMIT_AUTHOR).Returns(SomeCommitAuthor);
+            environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.COMMIT_BRANCH).Returns(AppVeyorBranch);
+            environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.COMMIT_EMAIL).Returns(SomeCommitEmail);
+            environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.COMMIT_ID).Returns(SomeCommitId);
+            environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.COMMIT_MESSAGE).Returns(SomeCommitMessage);
+            environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.JOB_ID).Returns(SomeJobId);
+            environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.REPO_NAME).Returns(SomeRepoName);
         };
 
         It should_set_service_name = () => CoverallsData.ServiceName.ShouldBe(nameof(AppVeyorProvider.AppVeyor).ToLower());
@@ -131,14 +113,10 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
 
         Establish context = () =>
         {
-            Environment.SetEnvironmentVariable(AppVeyorProvider.AppVeyor.PR_COMMIT_ID, SomePullRequestCommitId);
-            Environment.SetEnvironmentVariable(AppVeyorProvider.AppVeyor.PR_NUMBER, SomePullRequestNumber);
-        };
+            var environment = DiScope.Container.GetInstance<IEnvironmentVariables>();
 
-        Cleanup after = () =>
-        {
-            Environment.SetEnvironmentVariable(AppVeyorProvider.AppVeyor.PR_COMMIT_ID, null);
-            Environment.SetEnvironmentVariable(AppVeyorProvider.AppVeyor.PR_NUMBER, null);
+            environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.PR_COMMIT_ID).Returns(SomePullRequestCommitId);
+            environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.PR_NUMBER).Returns(SomePullRequestNumber);
         };
 
         It should_set_commit_id_to_pr_commit_id = () => CoverallsData.Git.Head.Id.ShouldBe(SomePullRequestCommitId);

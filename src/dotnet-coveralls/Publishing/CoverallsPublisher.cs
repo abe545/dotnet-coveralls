@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Dotnet.Coveralls.Adapters;
 using Dotnet.Coveralls.CommandLine;
 using Dotnet.Coveralls.Io;
-using Flurl.Http;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using Flurl;
+using Flurl.Http;
+using System.IO;
+using System.Text;
 
 namespace Dotnet.Coveralls.Publishing
 {
@@ -17,6 +21,7 @@ namespace Dotnet.Coveralls.Publishing
         private readonly ICoverallsDataBuilder coverallsDataBuilder;
         private readonly IOutputFileWriter fileWriter;
         private readonly IFileProvider fileProvider;
+        private readonly IEnvironmentVariables environmentVariables;
         private readonly ILogger<CoverallsPublisher> logger;
         private const string CoverallsEndpoint = "https://coveralls.io/api/v1/jobs";
 
@@ -25,12 +30,14 @@ namespace Dotnet.Coveralls.Publishing
             ICoverallsDataBuilder coverallsDataBuilder,
             IOutputFileWriter fileWriter, 
             IFileProvider fileProvider,
+            IEnvironmentVariables environmentVariables,
             ILoggerFactory loggerFactory)
         {
             this.options = options;
             this.coverallsDataBuilder = coverallsDataBuilder;
             this.fileWriter = fileWriter;
             this.fileProvider = fileProvider;
+            this.environmentVariables = environmentVariables;
             this.logger = loggerFactory.CreateLogger<CoverallsPublisher>();
         }
 

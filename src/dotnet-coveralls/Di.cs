@@ -1,4 +1,5 @@
 ﻿using System;
+using Dotnet.Coveralls.Adapters;
 using Dotnet.Coveralls.CommandLine;
 using Dotnet.Coveralls.Data;
 using Dotnet.Coveralls.Git;
@@ -28,6 +29,7 @@ namespace Dotnet.Coveralls
             container.Register<IFileWriter, FileWriter>();
             container.Register<IFileProvider>(() => new UnrestrictedFileProvider(Environment.CurrentDirectory));
             container.Register<IOutputFileWriter, OutputFileWriter>();
+            container.Register<IEnvironmentVariables, EnvironmentVariables>();
 
             container.Register<ProcessExecutor>();
             container.Register<CoverallsPublisher>();

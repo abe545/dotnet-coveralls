@@ -1,12 +1,14 @@
 ﻿using System.Threading.Tasks;
+using Dotnet.Coveralls.Adapters;
 using Dotnet.Coveralls.Data;
 using Dotnet.Coveralls.Git;
-using static System.Environment;
 
 namespace Dotnet.Coveralls.Publishing
 {
     public class EnvironmentVariablesProvider : ICoverallsDataProvider, IGitDataResolver
     {
+        private readonly IEnvironmentVariables environmentVariables;
+
         public static class CI
         {
             public const string REPO_TOKEN = "COVERALLS_REPO_TOKEN";
@@ -17,20 +19,25 @@ namespace Dotnet.Coveralls.Publishing
             public const string PULL_REQUEST = "CI_PULL_REQUEST";
         }
 
+        public EnvironmentVariablesProvider(IEnvironmentVariables environmentVariables)
+        {
+            this.environmentVariables = environmentVariables;
+        }
+
         public bool CanProvideData => true;
 
         public GitData GitData => new GitData
         {
-            Branch = GetEnvironmentVariable(CI.BRANCH)
+            Branch = environmentVariables.GetEnvironmentVariable(CI.BRANCH)
         };
 
         public Task<CoverallsData> ProvideCoverallsData() => Task.FromResult(new CoverallsData
         {
-            RepoToken = GetEnvironmentVariable(CI.REPO_TOKEN),
-            ServiceBuildUrl = GetEnvironmentVariable(CI.BUILD_URL),
-            ServiceName = GetEnvironmentVariable(CI.NAME),
-            ServiceNumber = GetEnvironmentVariable(CI.BUILD_NUMBER),
-            ServicePullRequest = GetEnvironmentVariable(CI.PULL_REQUEST),
+            RepoToken = environmentVariables.GetEnvironmentVariable(CI.REPO_TOKEN),
+            ServiceBuildUrl = environmentVariables.GetEnvironmentVariable(CI.BUILD_URL),
+            ServiceName = environmentVariables.GetEnvironmentVariable(CI.NAME),
+            ServiceNumber = environmentVariables.GetEnvironmentVariable(CI.BUILD_NUMBER),
+            ServicePullRequest = environmentVariables.GetEnvironmentVariable(CI.PULL_REQUEST),
         });
 
         public Task<GitData> CreateGitData() => Task.FromResult(GitData);

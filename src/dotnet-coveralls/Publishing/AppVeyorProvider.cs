@@ -1,14 +1,15 @@
+using Dotnet.Coveralls.Data;
+using Dotnet.Coveralls.Adapters;
+using Dotnet.Coveralls.Publishing;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Dotnet.Coveralls.Data;
-using Dotnet.Coveralls.Publishing;
-using static System.Environment;
 
 namespace Dotnet.Coveralls.Git
 {
     public class AppVeyorProvider : IGitDataResolver, ICoverallsDataProvider
     {
+        private readonly IEnvironmentVariables variables;
         public static class AppVeyor
         {
             public const string REPO_NAME = "APPVEYOR_REPO_NAME";
@@ -27,7 +28,12 @@ namespace Dotnet.Coveralls.Git
             public const string PR_HEAD_REPO_NAME = "APPVEYOR_PULL_REQUEST_HEAD_REPO_NAME";
         }
 
-        public bool CanProvideData => bool.TryParse(GetEnvironmentVariable(nameof(AppVeyor).ToUpper()), out var value) && value;
+        public AppVeyorProvider(IEnvironmentVariables variables)
+        {
+            this.variables = variables;
+        }
+
+        public bool CanProvideData => bool.TryParse(variables.GetEnvironmentVariable(nameof(AppVeyor).ToUpper()), out var value) && value;
 
         public GitData GitData =>
             new GitData
@@ -35,27 +41,27 @@ namespace Dotnet.Coveralls.Git
                 Head = new GitHead
                 {
                     Id =
-                        GetEnvironmentVariable(AppVeyor.PR_COMMIT_ID).NullIfEmpty() ??
-                        GetEnvironmentVariable(AppVeyor.COMMIT_ID),
-                    AuthorName = GetEnvironmentVariable(AppVeyor.COMMIT_AUTHOR),
-                    AuthorEmail = GetEnvironmentVariable(AppVeyor.COMMIT_EMAIL),
-                    CommitterName = GetEnvironmentVariable(AppVeyor.COMMIT_AUTHOR),
-                    CommitterEmail = GetEnvironmentVariable(AppVeyor.COMMIT_EMAIL),
-                    Message = GetEnvironmentVariable(AppVeyor.COMMIT_MESSAGE)
+                        variables.GetEnvironmentVariable(AppVeyor.PR_COMMIT_ID).NullIfEmpty() ??
+                        variables.GetEnvironmentVariable(AppVeyor.COMMIT_ID),
+                    AuthorName = variables.GetEnvironmentVariable(AppVeyor.COMMIT_AUTHOR),
+                    AuthorEmail = variables.GetEnvironmentVariable(AppVeyor.COMMIT_EMAIL),
+                    CommitterName = variables.GetEnvironmentVariable(AppVeyor.COMMIT_AUTHOR),
+                    CommitterEmail = variables.GetEnvironmentVariable(AppVeyor.COMMIT_EMAIL),
+                    Message = variables.GetEnvironmentVariable(AppVeyor.COMMIT_MESSAGE)
                 },
-                Branch = GetEnvironmentVariable(AppVeyor.COMMIT_BRANCH),
+                Branch = variables.GetEnvironmentVariable(AppVeyor.COMMIT_BRANCH),
                 Remotes = Remotes.ToArray(),
             };
 
         public Task<CoverallsData> ProvideCoverallsData() => Task.FromResult(new CoverallsData
         {
-            CommitSha = GetEnvironmentVariable(AppVeyor.COMMIT_ID),
-            ServiceBranch = GetEnvironmentVariable(AppVeyor.COMMIT_BRANCH),
+            CommitSha = variables.GetEnvironmentVariable(AppVeyor.COMMIT_ID),
+            ServiceBranch = variables.GetEnvironmentVariable(AppVeyor.COMMIT_BRANCH),
             ServiceName = nameof(AppVeyor).ToLower(),
-            ServiceJobId = GetEnvironmentVariable(AppVeyor.JOB_ID),
-            ServiceNumber = GetEnvironmentVariable(AppVeyor.BUILD_VERSION),
-            ServicePullRequest = GetEnvironmentVariable(AppVeyor.PR_NUMBER),
-            ServiceBuildUrl = $"https://ci.appveyor.com/project/{GetEnvironmentVariable(AppVeyor.REPO_NAME)}/build/{GetEnvironmentVariable(AppVeyor.BUILD_VERSION)}",
+            ServiceJobId = variables.GetEnvironmentVariable(AppVeyor.JOB_ID),
+            ServiceNumber = variables.GetEnvironmentVariable(AppVeyor.BUILD_VERSION),
+            ServicePullRequest = variables.GetEnvironmentVariable(AppVeyor.PR_NUMBER),
+            ServiceBuildUrl = $"https://ci.appveyor.com/project/{variables.GetEnvironmentVariable(AppVeyor.REPO_NAME)}/build/{variables.GetEnvironmentVariable(AppVeyor.BUILD_VERSION)}",
         });
 
         public Task<GitData> CreateGitData() => Task.FromResult(GitData);
@@ -64,8 +70,8 @@ namespace Dotnet.Coveralls.Git
         {
             get
             {
-                var host = GetEnvironmentVariable(AppVeyor.REPO_PROVIDER);
-                var origin = GetEnvironmentVariable(AppVeyor.REPO_NAME);
+                var host = variables.GetEnvironmentVariable(AppVeyor.REPO_PROVIDER);
+                var origin = variables.GetEnvironmentVariable(AppVeyor.REPO_NAME);
 
                 yield return new GitRemote
                 {
@@ -73,7 +79,7 @@ namespace Dotnet.Coveralls.Git
                     Url = $"https://{host}.com/{origin}"
                 };
 
-                var fork = GetEnvironmentVariable(AppVeyor.PR_HEAD_REPO_NAME);
+                var fork = variables.GetEnvironmentVariable(AppVeyor.PR_HEAD_REPO_NAME);
                 if (fork != null && fork != origin)
                 {
                     yield return new GitRemote
