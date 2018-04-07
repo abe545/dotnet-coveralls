@@ -36,10 +36,11 @@ namespace Dotnet.Coveralls.Git
             var remotes = (await Git("remote -v"))?.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
             if (remotes?.Length > 0)
             {
+                var splits = new[] { '\t', ' ' };
                 gitData.Remotes = remotes
                     .Select(r =>
                     {
-                        var parts = r.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                        var parts = r.Split(splits, StringSplitOptions.RemoveEmptyEntries);
                         if (parts.Length < 2) return null;
                         return new GitRemote { Name = parts[0], Url = parts[1] };
                     })
@@ -61,7 +62,7 @@ namespace Dotnet.Coveralls.Git
                     return null;
                 }
 
-                return stdOut;
+                return stdOut.TrimEnd();
             }
         }
     }
