@@ -39,5 +39,7 @@ namespace Dotnet.Coveralls.Publishing
             ServiceNumber = environmentVariables.GetEnvironmentVariable(CI.BUILD_NUMBER),
             ServicePullRequest = environmentVariables.GetEnvironmentVariable(CI.PULL_REQUEST),
         });
+
+        public Task<GitData> CreateGitData() => Task.FromResult(GitData);
     }
 }

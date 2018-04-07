@@ -15,15 +15,16 @@ namespace Dotnet.Coveralls.Publishing
 
         public bool CanProvideData => true;
 
-        public Task<CoverallsData> ProvideCoverallsData()
+        public async Task<CoverallsData> ProvideCoverallsData()
         {
-            return Task.FromResult(new CoverallsData
+            return new CoverallsData
             {
-                Git = gitDataResolvers
+                Git = (await gitDataResolvers
                     .Where(p => p.CanProvideData)
-                    .Select(p => p.GitData)
+                    .Select(p => p.CreateGitData()))
+                    .Where(g => g != null)
                     .Aggregate(new GitData(), CombineGitData)
-            });
+            };
 
             GitData CombineGitData(GitData accum, GitData toAdd) =>
                 new GitData

@@ -24,12 +24,13 @@ namespace Dotnet.Coveralls
             container.Options.DefaultScopedLifestyle = new AsyncScopedLifestyle();
 
             container.Register(() => options);
-            container.Register(() => new LoggerFactory().AddConsole());
+            container.Register(() => new LoggerFactory().AddConsole(options.Verbose ? LogLevel.Debug : LogLevel.Information));
 
             container.Register<IFileWriter, FileWriter>();
             container.Register<IFileProvider>(() => new UnrestrictedFileProvider(Environment.CurrentDirectory));
             container.Register<IOutputFileWriter, OutputFileWriter>();
             container.Register<IEnvironmentVariables, EnvironmentVariables>();
+            container.Register<IProcessExecutor, ProcessExecutor>();
 
             container.Register<CoverallsPublisher>();
             container.Register<ICoverageFileBuilder, CoverageFileBuilder>();
@@ -40,6 +41,7 @@ namespace Dotnet.Coveralls
             {
                 typeof(CommandLineGitDataResolver),
                 typeof(AppVeyorProvider),
+                typeof(GitProcessGitDataResolver),
                 typeof(EnvironmentVariablesProvider),
             });
 
