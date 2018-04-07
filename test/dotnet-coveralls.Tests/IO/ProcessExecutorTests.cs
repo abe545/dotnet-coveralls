@@ -3,10 +3,10 @@ using Dotnet.Coveralls.Io;
 using Machine.Specifications;
 using Shouldly;
 
-namespace Dotnet.Coveralls.Tests.IO.FileExecutorTests
+namespace Dotnet.Coveralls.Tests.IO.ProcessExecutorTests
 {
-    [Subject(typeof(FileExecutor))]
-    public class when_the_process_exits_successfully : with_file_executor
+    [Subject(typeof(ProcessExecutor))]
+    public class when_the_process_exits_successfully : with_process_executor
     {
         Establish context = () => ProcessStartInfo = new ProcessStartInfo("dotnet", "--version");
 
@@ -15,8 +15,8 @@ namespace Dotnet.Coveralls.Tests.IO.FileExecutorTests
         It should_return_stdout = () => StandardOut.ShouldNotBeNullOrWhiteSpace();
     }
 
-    [Subject(typeof(FileExecutor))]
-    public class when_the_process_fails : with_file_executor
+    [Subject(typeof(ProcessExecutor))]
+    public class when_the_process_fails : with_process_executor
     {
         Establish context = () => ProcessStartInfo = new ProcessStartInfo("dotnet", "--invalid-argument");
 
@@ -24,13 +24,13 @@ namespace Dotnet.Coveralls.Tests.IO.FileExecutorTests
         It should_return_stderr = () => StandardError.ShouldNotBeNullOrWhiteSpace();
     }
 
-    public class with_file_executor
+    public class with_process_executor
     {
-        Establish context = () => Subject = new FileExecutor();
+        Establish context = () => Subject = new ProcessExecutor();
 
         Because of = () => (StandardOut, StandardError, ExitCode) = Subject.Execute(ProcessStartInfo).Result;
 
-        protected static FileExecutor Subject;
+        protected static ProcessExecutor Subject;
         protected static ProcessStartInfo ProcessStartInfo;
         protected static int ExitCode;
         protected static string StandardError;

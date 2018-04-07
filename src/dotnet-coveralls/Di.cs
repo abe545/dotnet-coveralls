@@ -29,6 +29,7 @@ namespace Dotnet.Coveralls
             container.Register<IFileProvider>(() => new UnrestrictedFileProvider(Environment.CurrentDirectory));
             container.Register<IOutputFileWriter, OutputFileWriter>();
 
+            container.Register<ProcessExecutor>();
             container.Register<CoverallsPublisher>();
             container.Register<ICoverageFileBuilder, CoverageFileBuilder>();
             container.Register<ICoverallsDataBuilder, CoverallsDataBuilder>();

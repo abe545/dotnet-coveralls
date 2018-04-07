@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Dotnet.Coveralls.Io
 {
-    public class FileExecutor
+    public class ProcessExecutor
     {
         public virtual async Task<(string StandardOut, string StandardErr, int ReturnCode)> Execute(ProcessStartInfo processStartInfo)
         {
