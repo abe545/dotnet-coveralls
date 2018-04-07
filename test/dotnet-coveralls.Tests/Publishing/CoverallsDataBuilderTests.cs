@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using Dotnet.Coveralls.Data;
 using Dotnet.Coveralls.Git;
+using Dotnet.Coveralls.Io;
 using Dotnet.Coveralls.Parsers;
 using Dotnet.Coveralls.Publishing;
 using Machine.Specifications;
+using NSubstitute;
 using Shouldly;
 
 namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
@@ -25,7 +28,10 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
             Setup(new[] { "--lcov", "dummy" }, c =>
             {
                 c.RegisterCollection(typeof(ICoverageParser), Enumerable.Empty<Type>());
+                c.RegisterInstance(Substitute.For<ProcessExecutor>());
             });
+
+            DiScope.Container.GetInstance<ProcessExecutor>().Execute(Arg.Any<ProcessStartInfo>()).Returns((null, "none", 1));
             
             Environment.SetEnvironmentVariable(EnvironmentVariablesProvider.CI.BUILD_NUMBER, SomeBuildNumber);
             Environment.SetEnvironmentVariable(EnvironmentVariablesProvider.CI.BRANCH, SomeBranch);

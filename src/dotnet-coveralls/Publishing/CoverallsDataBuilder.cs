@@ -19,6 +19,7 @@ namespace Dotnet.Coveralls.Publishing
             return (await coverallsDataProviders
                 .Where(p => p.CanProvideData)
                 .Select(p => p.ProvideCoverallsData()))
+                .Where(c => c != null)
                 .Aggregate(new CoverallsData(), CombineData);
 
             CoverallsData CombineData(CoverallsData accum, CoverallsData toAdd) =>

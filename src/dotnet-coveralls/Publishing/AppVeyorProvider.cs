@@ -58,6 +58,8 @@ namespace Dotnet.Coveralls.Git
             ServiceBuildUrl = $"https://ci.appveyor.com/project/{GetEnvironmentVariable(AppVeyor.REPO_NAME)}/build/{GetEnvironmentVariable(AppVeyor.BUILD_VERSION)}",
         });
 
+        public Task<GitData> CreateGitData() => Task.FromResult(GitData);
+
         private IEnumerable<GitRemote> Remotes
         {
             get

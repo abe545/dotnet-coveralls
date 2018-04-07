@@ -1,4 +1,6 @@
-﻿namespace Dotnet.Coveralls.Data
+﻿using System;
+
+namespace Dotnet.Coveralls.Data
 {
     public sealed class CoverallsData
     {
@@ -36,5 +38,15 @@
     {
         public string Name { get; set; }
         public string Url { get; set; }
+
+        public override int GetHashCode() => Name.GetHashCode();
+        public override string ToString() => $"{Name} - {Url}";
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as GitRemote;
+            return Name.Equals(other?.Name, StringComparison.InvariantCultureIgnoreCase) &&
+                Url.Equals(other?.Url, StringComparison.InvariantCultureIgnoreCase);
+        }
     }
 }

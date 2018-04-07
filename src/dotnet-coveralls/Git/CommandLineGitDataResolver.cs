@@ -1,4 +1,5 @@
-﻿using Dotnet.Coveralls.CommandLine;
+﻿using System.Threading.Tasks;
+using Dotnet.Coveralls.CommandLine;
 using Dotnet.Coveralls.Data;
 
 namespace Dotnet.Coveralls.Git
@@ -28,5 +29,7 @@ namespace Dotnet.Coveralls.Git
                 },
                 Branch = coverallsOptions.CommitBranch,
             };
+
+        public Task<GitData> CreateGitData() => Task.FromResult(GitData);
     }
 }
