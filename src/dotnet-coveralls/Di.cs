@@ -40,8 +40,8 @@ namespace Dotnet.Coveralls
             container.RegisterCollection<IGitDataResolver>(new[] 
             {
                 typeof(CommandLineGitDataResolver),
-                typeof(GitProcessGitDataResolver),
                 typeof(AppVeyorProvider),
+                typeof(GitProcessGitDataResolver),
                 typeof(EnvironmentVariablesProvider),
             });
 
