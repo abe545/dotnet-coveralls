@@ -10,10 +10,10 @@ namespace Dotnet.Coveralls.Git
 {
     public class GitProcessGitDataResolver : IGitDataResolver
     {
-        private readonly ProcessExecutor processExecutor;
+        private readonly IProcessExecutor processExecutor;
         private readonly ILogger<GitProcessGitDataResolver> logger;
 
-        public GitProcessGitDataResolver(ProcessExecutor processExecutor, ILoggerFactory loggerFactory)
+        public GitProcessGitDataResolver(IProcessExecutor processExecutor, ILoggerFactory loggerFactory)
         {
             this.processExecutor = processExecutor;
             this.logger = loggerFactory.CreateLogger<GitProcessGitDataResolver>();
@@ -40,7 +40,7 @@ namespace Dotnet.Coveralls.Git
                     .Select(r =>
                     {
                         var parts = r.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                        if (parts.Length != 2) return null;
+                        if (parts.Length < 2) return null;
                         return new GitRemote { Name = parts[0], Url = parts[1] };
                     })
                     .Where(r => r != null)
@@ -52,6 +52,7 @@ namespace Dotnet.Coveralls.Git
 
             async Task<string> Git(string arguments)
             {
+                logger.LogDebug($"git {arguments}");
                 var psi = new ProcessStartInfo("git", arguments);
                 var (stdOut, stdErr, exit) = await processExecutor.Execute(psi);
                 if (exit > 0)

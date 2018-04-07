@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Dotnet.Coveralls.Io;
 using Machine.Specifications;
+using Microsoft.Extensions.Logging;
 using Shouldly;
 
 namespace Dotnet.Coveralls.Tests.IO.ProcessExecutorTests
@@ -26,7 +27,7 @@ namespace Dotnet.Coveralls.Tests.IO.ProcessExecutorTests
 
     public class with_process_executor
     {
-        Establish context = () => Subject = new ProcessExecutor();
+        Establish context = () => Subject = new ProcessExecutor(new LoggerFactory());
 
         Because of = () => (StandardOut, StandardError, ExitCode) = Subject.Execute(ProcessStartInfo).Result;
 

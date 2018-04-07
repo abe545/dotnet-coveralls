@@ -24,14 +24,18 @@ namespace Dotnet.Coveralls
             container.Options.DefaultScopedLifestyle = new AsyncScopedLifestyle();
 
             container.Register(() => options);
-            container.Register(() => new LoggerFactory().AddConsole());
+            container.Register(() =>
+                new LoggerFactory(
+                    new ILoggerProvider[0], 
+                    new LoggerFilterOptions { MinLevel = options.Verbose ? LogLevel.Debug : LogLevel.Information })
+                .AddConsole());
 
             container.Register<IFileWriter, FileWriter>();
             container.Register<IFileProvider>(() => new UnrestrictedFileProvider(Environment.CurrentDirectory));
             container.Register<IOutputFileWriter, OutputFileWriter>();
             container.Register<IEnvironmentVariables, EnvironmentVariables>();
+            container.Register<IProcessExecutor, ProcessExecutor>();
 
-            container.Register<ProcessExecutor>();
             container.Register<CoverallsPublisher>();
             container.Register<ICoverageFileBuilder, CoverageFileBuilder>();
             container.Register<ICoverallsDataBuilder, CoverallsDataBuilder>();

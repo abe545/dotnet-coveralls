@@ -1,12 +1,20 @@
 ﻿using System.Diagnostics;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace Dotnet.Coveralls.Io
 {
-    public class ProcessExecutor
+    public class ProcessExecutor : IProcessExecutor
     {
-        public virtual async Task<(string StandardOut, string StandardErr, int ReturnCode)> Execute(ProcessStartInfo processStartInfo)
+        private readonly ILogger<ProcessExecutor> Logger;
+
+        public ProcessExecutor(ILoggerFactory loggerFactory)
+        {
+            Logger = loggerFactory.CreateLogger<ProcessExecutor>();
+        }
+
+        public async Task<(string StandardOut, string StandardErr, int ReturnCode)> Execute(ProcessStartInfo processStartInfo)
         {
             processStartInfo.RedirectStandardError = true;
             processStartInfo.RedirectStandardOutput = true;
@@ -17,10 +25,19 @@ namespace Dotnet.Coveralls.Io
 
             using (var process = Process.Start(processStartInfo))
             {
-                process.OutputDataReceived += (_, e) => stdOut.AppendLine(e.Data);
-                process.BeginOutputReadLine();
+                process.OutputDataReceived += (_, e) =>
+                {
+                    stdOut.AppendLine(e.Data);
+                    Logger.LogDebug(e.Data);
+                };
 
-                process.ErrorDataReceived += (_, e) => stdErr.AppendLine(e.Data);
+                process.ErrorDataReceived += (_, e) =>
+                {
+                    stdErr.AppendLine(e.Data);
+                    Logger.LogDebug(e.Data);
+                };
+
+                process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
 
                 await Task.Run(() => process.WaitForExit());

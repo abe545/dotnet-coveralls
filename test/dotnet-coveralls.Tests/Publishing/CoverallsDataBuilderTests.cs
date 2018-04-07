@@ -30,10 +30,10 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
             {
                 c.RegisterCollection(typeof(ICoverageParser), Enumerable.Empty<Type>());
                 c.Register(() => Substitute.For<IEnvironmentVariables>());
-                c.RegisterInstance(Substitute.For<ProcessExecutor>());
+                c.RegisterInstance(Substitute.For<IProcessExecutor>());
             });
 
-            DiScope.Container.GetInstance<ProcessExecutor>().Execute(Arg.Any<ProcessStartInfo>()).Returns((null, "none", 1));
+            DiScope.Container.GetInstance<IProcessExecutor>().Execute(Arg.Any<ProcessStartInfo>()).Returns((null, "none", 1));
             var environment = DiScope.Container.GetInstance<IEnvironmentVariables>();
 
             environment.GetEnvironmentVariable(EnvironmentVariablesProvider.CI.BUILD_NUMBER).Returns(SomeBuildNumber);
