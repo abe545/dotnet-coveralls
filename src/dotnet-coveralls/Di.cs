@@ -24,11 +24,7 @@ namespace Dotnet.Coveralls
             container.Options.DefaultScopedLifestyle = new AsyncScopedLifestyle();
 
             container.Register(() => options);
-            container.Register(() =>
-                new LoggerFactory(
-                    new ILoggerProvider[0], 
-                    new LoggerFilterOptions { MinLevel = options.Verbose ? LogLevel.Debug : LogLevel.Information })
-                .AddConsole());
+            container.Register(() => new LoggerFactory().AddConsole(options.Verbose ? LogLevel.Debug : LogLevel.Information));
 
             container.Register<IFileWriter, FileWriter>();
             container.Register<IFileProvider>(() => new UnrestrictedFileProvider(Environment.CurrentDirectory));
