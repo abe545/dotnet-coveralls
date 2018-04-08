@@ -13,7 +13,7 @@ using Shouldly;
 
 namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
 {
-    [Subject(nameof(CommandLineGitDataResolver) + "," + nameof(CommandLineProvider))]
+    [Subject(typeof(CommandLineProvider))]
     public class when_git_info_passed_on_command_line : Spec
     {
         protected const string SomeBuildNumber = "18";
