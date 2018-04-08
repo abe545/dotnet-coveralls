@@ -172,7 +172,6 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
     [Subject(typeof(AppVeyorProvider))]
     public class when_appveyor_available : when_ci_environment_variables_available
     {
-        protected const string AppVeyorBuildNumber = "2";
         protected const string SomeBuildVersion = "number-two";
         protected const string SomeCommitAuthor = "Spock";
         protected const string SomeCommitEmail = "Spock@starfleet.gov";
@@ -187,7 +186,6 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
             var environment = DiScope.Container.GetInstance<IEnvironmentVariables>();
 
             environment.GetEnvironmentVariable(nameof(AppVeyorProvider.AppVeyor).ToUpper()).Returns("true");
-            environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.BUILD_NUMBER).Returns(AppVeyorBuildNumber);
             environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.BUILD_VERSION).Returns(SomeBuildVersion);
             environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.COMMIT_AUTHOR).Returns(SomeCommitAuthor);
             environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.COMMIT_BRANCH).Returns(AppVeyorBranch);
@@ -200,7 +198,7 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
 
         It should_set_service_name = () => CoverallsData.ServiceName.ShouldBe(nameof(AppVeyorProvider.AppVeyor).ToLower());
         It should_set_service_job_id = () => CoverallsData.ServiceJobId.ShouldBe(SomeJobId);
-        It should_set_service_number = () => CoverallsData.ServiceNumber.ShouldBe(AppVeyorBuildNumber);
+        It should_set_service_number = () => CoverallsData.ServiceNumber.ShouldBe(SomeBuildVersion);
         It should_set_service_build_url = () => CoverallsData.ServiceBuildUrl.ShouldBe($"https://ci.appveyor.com/project/{SomeRepoName}/build/{SomeBuildVersion}");
         It should_set_service_branch = () => CoverallsData.ServiceBranch.ShouldBe(AppVeyorBranch);
         It should_set_commit_sha = () => CoverallsData.CommitSha.ShouldBe(SomeCommitId);
