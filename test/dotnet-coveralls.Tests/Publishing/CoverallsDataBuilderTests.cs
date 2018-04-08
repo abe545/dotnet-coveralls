@@ -213,19 +213,17 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
     public class when_appveyor_available_and_is_pr : when_appveyor_available
     {
         protected const string SomePullRequestNumber = "18";
-        protected const string SomePullRequestBranch = "number-81";
 
         Establish context = () =>
         {
             var environment = DiScope.Container.GetInstance<IEnvironmentVariables>();
 
             environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.PR_NUMBER).Returns(SomePullRequestNumber);
-            environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.PR_BRANCH).Returns(SomePullRequestBranch);
         };
 
         It should_set_pull_request = () => CoverallsData.ServicePullRequest.ShouldBe(SomePullRequestNumber);
         It should_set_service_branch = () => CoverallsData.ServiceBranch.ShouldBe(AppVeyorBranch);
-        It should_set_git_branch = () => CoverallsData.Git.Branch.ShouldBe(SomePullRequestBranch);
+        It should_set_git_branch = () => CoverallsData.Git.Branch.ShouldBe(AppVeyorBranch);
     }
 
     [Subject(typeof(GitProcessGitDataResolver))]
