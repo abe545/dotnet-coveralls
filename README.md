@@ -1,4 +1,4 @@
-dotnet-coveralls
+daotnet-coveralls
 =============
 [![Build status](https://ci.appveyor.com/api/projects/status/up29r5k4ca0900q1/branch/master?svg=true)](https://ci.appveyor.com/project/abe545/dotnet-coveralls/branch/master) [![Coverage Status](https://coveralls.io/repos/github/abe545/dotnet-coveralls/badge.svg?branch=master)](https://coveralls.io/github/abe545/dotnet-coveralls?branch=master)
 
@@ -24,7 +24,7 @@ After installation, full usage is available from the command line `dotnet covera
 You'll need to pass one or more coverage files to the command line, via the individual parser's switch. You can pass each file type switch multiple times (or mix and match your coverage types), and it will merge the coverage report for you. Here's an example of how this repo passes data to coveralls for its tests:
 
 ```
-dotnet cover --open-cover C:\projects\dotnet-coveralls\test\dotnet-coveralls.Tests\coverage.xml --use-relative-paths --base-path C:\projects\dotnet-coveralls
+dotnet coveralls --open-cover C:\projects\dotnet-coveralls\test\dotnet-coveralls.Tests\coverage.xml --use-relative-paths --base-path C:\projects\dotnet-coveralls
 ```
 
 I tried to support the documentation on [coveralls.io](https://docs.coveralls.io/supported-ci-services). Basically, all the `CI_*` environment variables can be used to pass the majority of the information that coveralls needs to generate reports. 
