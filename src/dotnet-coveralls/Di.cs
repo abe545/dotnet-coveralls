@@ -41,6 +41,7 @@ namespace Dotnet.Coveralls
             {
                 typeof(CommandLineGitDataResolver),
                 typeof(AppVeyorProvider),
+                typeof(GitEnvironmentVariableGitDataResolver),
                 typeof(GitProcessGitDataResolver),
                 typeof(EnvironmentVariablesProvider),
             });

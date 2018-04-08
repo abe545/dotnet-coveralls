@@ -50,6 +50,9 @@ namespace Dotnet.Coveralls.CommandLine
         [NamedArgument("job-id", Description = "The unique job Id to provide to coveralls.io.")]
         public string JobId { get; set; }
 
+        [NamedArgument("build-url", Description = "The url to the CI build.")]
+        public string BuildUrl { get; set; }
+
         [NamedArgument("build-number", Description = "The build number. Will increment automatically if not specified.")]
         public string BuildNumber { get; set; }
 
