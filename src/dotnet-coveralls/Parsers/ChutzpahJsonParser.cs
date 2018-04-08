@@ -48,12 +48,7 @@ namespace Dotnet.Coveralls.Parsers
                         item.LineExecutionCounts = item.LineExecutionCounts.Skip(1).ToArray();
                     }
 
-                    if (options.UseRelativePaths)
-                    {
-                        currentFilePath = pathProcessor.ConvertPath(currentFilePath);
-                    }
-
-                    currentFilePath = pathProcessor.UnixifyPath(currentFilePath);
+                    currentFilePath = pathProcessor.NormalizePath(currentFilePath);
 
                     files.Add(new CoverageFile(currentFilePath,
                         Crypto.CalculateMD5Digest(string.Join(",", item.SourceLines)), item.LineExecutionCounts));

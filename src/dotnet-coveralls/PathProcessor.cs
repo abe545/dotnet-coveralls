@@ -14,16 +14,14 @@ namespace Dotnet.Coveralls
             this.options = options;
         }
 
-        public string ConvertPath(string path)
+        public string NormalizePath(string path)
         {
             if (options.UseRelativePaths && path.StartsWith(BasePath, StringComparison.InvariantCultureIgnoreCase))
             {
-                return path.Substring(BasePath.Length);
+                path = path.Substring(BasePath.Length);
             }
 
-            return path;
+            return path.Replace('\\', '/').Replace(":", "");
         }
-
-        public string UnixifyPath(string filePath) => filePath.Replace('\\', '/').Replace(":", "");
     }
 }

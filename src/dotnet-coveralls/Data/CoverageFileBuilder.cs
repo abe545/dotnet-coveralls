@@ -30,11 +30,7 @@ namespace Dotnet.Coveralls.Data
             async Task<CoverageFile> BuildCoverageFile(FileCoverageData coverageFileData)
             {
                 var path = coverageFileData.FullPath;
-                if (options.UseRelativePaths)
-                {
-                    path = pathProcessor.ConvertPath(path);
-                }
-                path = pathProcessor.UnixifyPath(path);
+                path = pathProcessor.NormalizePath(path);
 
                 var fileInfo = fileProvider.GetFileInfo(coverageFileData.FullPath);
                 var lines = new List<string>();
