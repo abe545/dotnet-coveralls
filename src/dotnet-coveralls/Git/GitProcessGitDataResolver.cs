@@ -13,6 +13,18 @@ namespace Dotnet.Coveralls.Git
         private readonly IProcessExecutor processExecutor;
         private readonly ILogger<GitProcessGitDataResolver> logger;
 
+        public static class GitArgs
+        {
+            public const string ID = "log -1 --pretty=format:'%H'";
+            public const string AUTHOR_EMAIL = "log -1 --pretty=format:'%ae'";
+            public const string AUTHOR_NAME = "log -1 --pretty=format:'%aN'";
+            public const string COMMITTER_EMAIL = "log -1 --pretty=format:'%ce'";
+            public const string COMMITTER_NAME = "log -1 --pretty=format:'%cN'";
+            public const string MESSAGE = "log -1 --pretty=format:'%s'";
+            public const string BRANCH = "rev-parse --abbrev-ref HEAD";
+            public const string REMOTES = "remote -v";
+        }
+
         public GitProcessGitDataResolver(IProcessExecutor processExecutor, ILoggerFactory loggerFactory)
         {
             this.processExecutor = processExecutor;
@@ -25,15 +37,15 @@ namespace Dotnet.Coveralls.Git
         {
             var gitData = new GitData { Head = new GitHead() };
 
-            gitData.Head.Id = await Git("log -1 --pretty=format:'%H'");
-            gitData.Head.AuthorName = await Git("log -1 --pretty=format:'%aN'");
-            gitData.Head.AuthorEmail = await Git("log -1 --pretty=format:'%ae'");
-            gitData.Head.CommitterName = await Git("log -1 --pretty=format:'%cN'");
-            gitData.Head.CommitterEmail = await Git("log -1 --pretty=format:'%ce'");
-            gitData.Head.Message = await Git("log -1 --pretty=format:'%s'");
-            gitData.Branch = await Git("rev-parse --abbrev-ref HEAD");
+            gitData.Head.Id = await Git(GitArgs.ID);
+            gitData.Head.AuthorName = await Git(GitArgs.AUTHOR_NAME);
+            gitData.Head.AuthorEmail = await Git(GitArgs.AUTHOR_EMAIL);
+            gitData.Head.CommitterName = await Git(GitArgs.COMMITTER_NAME);
+            gitData.Head.CommitterEmail = await Git(GitArgs.COMMITTER_EMAIL);
+            gitData.Head.Message = await Git(GitArgs.MESSAGE);
+            gitData.Branch = await Git(GitArgs.BRANCH);
 
-            var remotes = (await Git("remote -v"))?.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            var remotes = (await Git(GitArgs.REMOTES))?.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
             if (remotes?.Length > 0)
             {
                 var splits = new[] { '\t', ' ' };

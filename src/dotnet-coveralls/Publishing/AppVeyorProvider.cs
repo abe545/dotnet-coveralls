@@ -40,7 +40,7 @@ namespace Dotnet.Coveralls.Git
                     CommitterName = variables.GetEnvironmentVariable(AppVeyor.COMMIT_AUTHOR),
                     CommitterEmail = variables.GetEnvironmentVariable(AppVeyor.COMMIT_EMAIL),
                     Message = variables.GetEnvironmentVariable(AppVeyor.COMMIT_MESSAGE)
-                }
+                },
             };
 
         public Task<CoverallsData> ProvideCoverallsData() => Task.FromResult(new CoverallsData

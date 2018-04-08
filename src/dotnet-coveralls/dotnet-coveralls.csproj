@@ -7,6 +7,8 @@
     <RootNamespace>Dotnet.Coveralls</RootNamespace>
     <LangVersion>latest</LangVersion>
     <PackageVersion>0.1.0</PackageVersion>
+    <Version>0.1.0</Version>
+    <InformationalVersion>0.1.0</InformationalVersion>
     <Title>A .net cli tool to publish coverage data to coveralls.io</Title>
     <Authors>Abraham Heidebrecht</Authors>
     <PackageProjectUrl>https://github.com/abe545/dotnet-coveralls</PackageProjectUrl>

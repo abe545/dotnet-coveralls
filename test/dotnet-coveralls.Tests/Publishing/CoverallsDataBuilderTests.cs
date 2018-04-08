@@ -13,6 +13,65 @@ using Shouldly;
 
 namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
 {
+    [Subject(nameof(CommandLineGitDataResolver) + "," + nameof(CommandLineProvider))]
+    public class when_git_info_passed_on_command_line : Spec
+    {
+        protected const string SomeBuildNumber = "18";
+        protected const string SomeBranch = "vogsphere";
+        protected const string SomeServiceName = "Hitchikers guide to the galaxy";
+        protected const string SomeCoverallsToken = "vogon";
+        protected const string SomeBuildUrl = "htts://my.ci.com/build/panic";
+        protected const string SomeAuthorName = "Arthur Dent";
+        protected const string SomeAuthorEmail = "arthur@dent.guide";
+        protected const string SomeCommitId = "4242";
+        protected const string SomeCommitMessage = "Don't Panic!";
+        protected static string SomePullRequestNumber = "42";
+        protected const string SomeJobId = "42-42";
+        protected const string SomeRepoName = "HGTTG";
+
+        protected static CoverallsData CoverallsData;
+
+        Establish context = () =>
+        {
+            Setup(new[] 
+            {
+                "--lcov", "dummy",
+                "--repo-token", SomeCoverallsToken,
+                "--service-name", SomeServiceName,
+                "--job-id", SomeJobId,
+                "--build-number", SomeBuildNumber,
+                "--commit-id", SomeCommitId,
+                "--commit-branch", SomeBranch,
+                "--commit-author", SomeAuthorName,
+                "--commit-email", SomeAuthorEmail,
+                "--commit-message", SomeCommitMessage,
+                "--pr-id", SomePullRequestNumber,
+                "--build-url", SomeBuildUrl
+            }, c =>
+            {
+                c.RegisterCollection(typeof(ICoverageParser), Enumerable.Empty<Type>());
+            });
+        };
+
+        Because of = () => CoverallsData = DiScope.Container.GetInstance<ICoverallsDataBuilder>().ProvideCoverallsData().Result;
+
+        It should_set_service_name = () => CoverallsData.ServiceName.ShouldBe(SomeServiceName);
+        It should_set_service_job_id = () => CoverallsData.ServiceJobId.ShouldBe(SomeJobId);
+        It should_set_service_number = () => CoverallsData.ServiceNumber.ShouldBe(SomeBuildNumber);
+        It should_set_service_build_url = () => CoverallsData.ServiceBuildUrl.ShouldBe(SomeBuildUrl);
+        It should_set_service_branch = () => CoverallsData.ServiceBranch.ShouldBe(SomeBranch);
+        It should_set_commit_sha = () => CoverallsData.CommitSha.ShouldBe(SomeCommitId);
+        It should_set_the_branch = () => CoverallsData.Git.Branch.ShouldBe(SomeBranch);
+        It should_set_coveralls_token = () => CoverallsData.RepoToken.ShouldBe(SomeCoverallsToken);
+        It should_set_commit_id = () => CoverallsData.Git.Head.Id.ShouldBe(SomeCommitId);
+        It should_set_author_name = () => CoverallsData.Git.Head.AuthorName.ShouldBe(SomeAuthorName);
+        It should_set_author_email = () => CoverallsData.Git.Head.AuthorEmail.ShouldBe(SomeAuthorEmail);
+        It should_set_committer_name = () => CoverallsData.Git.Head.CommitterName.ShouldBe(SomeAuthorName);
+        It should_set_committer_email = () => CoverallsData.Git.Head.CommitterEmail.ShouldBe(SomeAuthorEmail);
+        It should_set_commit_message = () => CoverallsData.Git.Head.Message.ShouldBe(SomeCommitMessage);
+        It should_set_pull_request = () => CoverallsData.ServicePullRequest.ShouldBe(SomePullRequestNumber);
+    }
+
     [Subject(typeof(EnvironmentVariablesProvider))]
     public class when_ci_environment_variables_available : Spec
     {
@@ -54,6 +113,20 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
     }
 
     [Subject(typeof(EnvironmentVariablesProvider))]
+    public class when_ci_environment_variables_and_coveralls_service_name_available : Spec
+    {
+        protected const string SomeCoverallsServiceName = "Star Trek";
+
+        protected static CoverallsData CoverallsData;
+
+        Establish context = () => DiScope.Container.GetInstance<IEnvironmentVariables>().GetEnvironmentVariable(EnvironmentVariablesProvider.CI.SERVICE_NAME).Returns(SomeCoverallsServiceName);
+
+        Because of = () => CoverallsData = DiScope.Container.GetInstance<ICoverallsDataBuilder>().ProvideCoverallsData().Result;
+
+        It should_set_service_name = () => CoverallsData.ServiceName.ShouldBe(SomeCoverallsServiceName);
+    }
+
+    [Subject(typeof(EnvironmentVariablesProvider))]
     public class when_parsing_pr_and_ci_environment_variables_available : when_ci_environment_variables_available
     {
         protected static string SomePullRequestNumber = "17";
@@ -61,6 +134,39 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
         Establish context = () => DiScope.Container.GetInstance<IEnvironmentVariables>().GetEnvironmentVariable(EnvironmentVariablesProvider.CI.PULL_REQUEST).Returns(SomePullRequestNumber);
 
         It should_set_pull_request = () => CoverallsData.ServicePullRequest.ShouldBe(SomePullRequestNumber);
+    }
+
+    [Subject(typeof(GitEnvironmentVariableGitDataResolver))]
+    public class when_git_environment_variables_available : when_ci_environment_variables_available
+    {
+        protected const string SomeAuthorName = "James T. Kirk";
+        protected const string SomeAuthorEmail = "james.kirk@starfleet.gov";
+        protected const string SomeCommitterName = "James";
+        protected const string SomeCommitterEmail = "kirk@starfleet.gov";
+        protected const string GitBranch = "earth";
+        protected const string SomeCommitId = "123456";
+        protected const string SomeCommitMessage = "Conquest is easy. Control is not.";
+
+        Establish context = () =>
+        {
+            var environment = DiScope.Container.GetInstance<IEnvironmentVariables>();
+
+            environment.GetEnvironmentVariable(GitEnvironmentVariableGitDataResolver.Git.AUTHOR_NAME).Returns(SomeAuthorName);
+            environment.GetEnvironmentVariable(GitEnvironmentVariableGitDataResolver.Git.AUTHOR_EMAIL).Returns(SomeAuthorEmail);
+            environment.GetEnvironmentVariable(GitEnvironmentVariableGitDataResolver.Git.COMMITTER_NAME).Returns(SomeCommitterName);
+            environment.GetEnvironmentVariable(GitEnvironmentVariableGitDataResolver.Git.COMMITTER_EMAIL).Returns(SomeCommitterEmail);
+            environment.GetEnvironmentVariable(GitEnvironmentVariableGitDataResolver.Git.BRANCH).Returns(GitBranch);
+            environment.GetEnvironmentVariable(GitEnvironmentVariableGitDataResolver.Git.ID).Returns(SomeCommitId);
+            environment.GetEnvironmentVariable(GitEnvironmentVariableGitDataResolver.Git.MESSAGE).Returns(SomeCommitMessage);
+        };
+
+        It should_set_commit_id = () => CoverallsData.Git.Head.Id.ShouldBe(SomeCommitId);
+        It should_set_author_name = () => CoverallsData.Git.Head.AuthorName.ShouldBe(SomeAuthorName);
+        It should_set_author_email = () => CoverallsData.Git.Head.AuthorEmail.ShouldBe(SomeAuthorEmail);
+        It should_set_committer_name = () => CoverallsData.Git.Head.CommitterName.ShouldBe(SomeCommitterName);
+        It should_set_committer_email = () => CoverallsData.Git.Head.CommitterEmail.ShouldBe(SomeCommitterEmail);
+        It should_set_commit_message = () => CoverallsData.Git.Head.Message.ShouldBe(SomeCommitMessage);
+        It should_not_set_pr = () => CoverallsData.ServicePullRequest.ShouldBeNull();
     }
 
     [Subject(typeof(AppVeyorProvider))]
@@ -94,6 +200,7 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
         It should_set_service_job_id = () => CoverallsData.ServiceJobId.ShouldBe(SomeJobId);
         It should_set_service_number = () => CoverallsData.ServiceNumber.ShouldBe(SomeBuildVersion);
         It should_set_service_build_url = () => CoverallsData.ServiceBuildUrl.ShouldBe($"https://ci.appveyor.com/project/{SomeRepoName}/build/{SomeBuildVersion}");
+        It should_set_service_branch = () => CoverallsData.ServiceBranch.ShouldBe(AppVeyorBranch);
         It should_set_commit_sha = () => CoverallsData.CommitSha.ShouldBe(SomeCommitId);
         It should_set_committer_name = () => CoverallsData.Git.Head.CommitterName.ShouldBe(SomeCommitAuthor);
         It should_set_committer_email = () => CoverallsData.Git.Head.CommitterEmail.ShouldBe(SomeCommitEmail);
@@ -102,9 +209,8 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
     }
 
     [Subject(typeof(AppVeyorProvider))]
-    public class when_parsing_pr_and_when_appveyor_available : when_appveyor_available
+    public class when_appveyor_available_and_is_pr : when_appveyor_available
     {
-        protected const string SomePullRequestCommitId = "09871a";
         protected const string SomePullRequestNumber = "18";
 
         Establish context = () =>
@@ -115,5 +221,52 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
         };
 
         It should_set_pull_request = () => CoverallsData.ServicePullRequest.ShouldBe(SomePullRequestNumber);
+    }
+
+    [Subject(typeof(GitProcessGitDataResolver))]
+    public class when_is_git_repo : when_ci_environment_variables_available
+    {
+        protected const string SomeAuthorName = "Jean Luc Picard";
+        protected const string SomeAuthorEmail = "jean.picard@starfleet.gov";
+        protected const string SomeCommitterName = "Jean";
+        protected const string SomeCommitterEmail = "picard@starfleet.gov";
+        protected const string GitBranch = "france";
+        protected const string SomeCommitId = "098765";
+        protected const string SomeCommitMessage = "Tea. Earl Grey. Hot.";
+        protected const string SomeRemoteUpstream = "tng@starfleet.git";
+        protected const string SomeRemoteOrigin = "enterprise@starfleet.git";
+
+        Establish context = () =>
+        {
+            var processExecutor = DiScope.Container.GetInstance<IProcessExecutor>();
+
+            SetupGit(GitProcessGitDataResolver.GitArgs.AUTHOR_NAME, SomeAuthorName);
+            SetupGit(GitProcessGitDataResolver.GitArgs.AUTHOR_EMAIL, SomeAuthorEmail);
+            SetupGit(GitProcessGitDataResolver.GitArgs.COMMITTER_NAME, SomeCommitterName);
+            SetupGit(GitProcessGitDataResolver.GitArgs.COMMITTER_EMAIL, SomeCommitterEmail);
+            SetupGit(GitProcessGitDataResolver.GitArgs.BRANCH, GitBranch);
+            SetupGit(GitProcessGitDataResolver.GitArgs.ID, SomeCommitId);
+            SetupGit(GitProcessGitDataResolver.GitArgs.MESSAGE, SomeCommitMessage);
+            SetupGit(GitProcessGitDataResolver.GitArgs.REMOTES, $"upstream\t{SomeRemoteUpstream} (fetch)\r\nupstream\t{SomeRemoteUpstream} (push)\norigin {SomeRemoteOrigin}");
+
+            void SetupGit(string arguments, string result) =>
+                processExecutor.Execute(Arg.Is<ProcessStartInfo>(psi => psi.FileName == "git" && psi.Arguments == arguments)).Returns((result, null, 0));
+        };
+
+        It should_set_commit_id = () => CoverallsData.Git.Head.Id.ShouldBe(SomeCommitId);
+        It should_set_author_name = () => CoverallsData.Git.Head.AuthorName.ShouldBe(SomeAuthorName);
+        It should_set_author_email = () => CoverallsData.Git.Head.AuthorEmail.ShouldBe(SomeAuthorEmail);
+        It should_set_committer_name = () => CoverallsData.Git.Head.CommitterName.ShouldBe(SomeCommitterName);
+        It should_set_committer_email = () => CoverallsData.Git.Head.CommitterEmail.ShouldBe(SomeCommitterEmail);
+        It should_set_commit_message = () => CoverallsData.Git.Head.Message.ShouldBe(SomeCommitMessage);
+        It should_not_set_pr = () => CoverallsData.ServicePullRequest.ShouldBeNull();
+        It should_set_remotes = () =>
+        {
+            CoverallsData.Git.Remotes.ShouldBe(new[]
+            {
+                new GitRemote { Name = "upstream", Url = SomeRemoteUpstream },
+                new GitRemote { Name = "origin", Url = SomeRemoteOrigin }
+            });
+        };
     }
 }

@@ -60,10 +60,7 @@ namespace Dotnet.Coveralls.Parsers
                             var coverage = new List<int?>();
                             var source = new List<string>();
                             var filePath = sourceElement.Attribute("sourceFile").Value;
-                            if (options.UseRelativePaths)
-                            {
-                                filePath = pathProcessor.ConvertPath(filePath);
-                            }
+                            filePath = pathProcessor.NormalizePath(filePath);
 
                             foreach (var line in sourceElement.Elements("l"))
                             {
@@ -78,8 +75,7 @@ namespace Dotnet.Coveralls.Parsers
                                 source.Add(line.Value);
                             }
 
-                            return new CoverageFile(filePath,
-                                Crypto.CalculateMD5Digest(string.Join(",", source.ToArray())), coverage.ToArray());
+                            return new CoverageFile(filePath, source, coverage.ToArray());
                         });
             }
         }

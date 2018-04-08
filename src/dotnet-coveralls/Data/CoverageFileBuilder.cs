@@ -30,11 +30,7 @@ namespace Dotnet.Coveralls.Data
             async Task<CoverageFile> BuildCoverageFile(FileCoverageData coverageFileData)
             {
                 var path = coverageFileData.FullPath;
-                if (options.UseRelativePaths)
-                {
-                    path = pathProcessor.ConvertPath(path);
-                }
-                path = pathProcessor.UnixifyPath(path);
+                path = pathProcessor.NormalizePath(path);
 
                 var fileInfo = fileProvider.GetFileInfo(coverageFileData.FullPath);
                 var lines = new List<string>();
@@ -64,9 +60,8 @@ namespace Dotnet.Coveralls.Data
                     coverage = new int?[length];
                     coverageFileData.Coverage.CopyTo(coverage, 0);
                 }
-
-                var sourceDigest = Crypto.CalculateMD5Digest(string.Join("\n", lines?.ToArray() ?? new string[0]));
-                return new CoverageFile(path, sourceDigest, coverage);
+                
+                return new CoverageFile(path, lines, coverage);
             }
         }
     }

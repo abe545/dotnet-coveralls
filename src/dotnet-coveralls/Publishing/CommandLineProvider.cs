@@ -22,6 +22,10 @@ namespace Dotnet.Coveralls.Publishing
             ServiceNumber = options.BuildNumber,
             ServicePullRequest = options.PullRequestId,
             RepoToken = options.RepoToken,
+            CommitSha = options.CommitId,
+            ServiceBranch = options.CommitBranch,
+            ServiceBuildUrl = options.BuildUrl,
+            Parallel = options.Parallel ? (bool?)true : null,
         });
     }
 }
