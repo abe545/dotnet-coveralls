@@ -75,8 +75,7 @@ namespace Dotnet.Coveralls.Parsers
                                 source.Add(line.Value);
                             }
 
-                            return new CoverageFile(filePath,
-                                Crypto.CalculateMD5Digest(string.Join(",", source.ToArray())), coverage.ToArray());
+                            return new CoverageFile(filePath, source, coverage.ToArray());
                         });
             }
         }

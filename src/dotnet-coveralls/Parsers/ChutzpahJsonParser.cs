@@ -41,17 +41,15 @@ namespace Dotnet.Coveralls.Parsers
 
                 foreach (var item in deserialized.Values)
                 {
-                    var currentFilePath = item.FilePath;
-
                     if (item.LineExecutionCounts.Length == item.SourceLines.Length + 1)
                     {
                         item.LineExecutionCounts = item.LineExecutionCounts.Skip(1).ToArray();
                     }
 
-                    currentFilePath = pathProcessor.NormalizePath(currentFilePath);
-
-                    files.Add(new CoverageFile(currentFilePath,
-                        Crypto.CalculateMD5Digest(string.Join(",", item.SourceLines)), item.LineExecutionCounts));
+                    files.Add(new CoverageFile(
+                        pathProcessor.NormalizePath(item.FilePath),
+                        item.SourceLines,
+                        item.LineExecutionCounts));
                 }
 
                 return files;
