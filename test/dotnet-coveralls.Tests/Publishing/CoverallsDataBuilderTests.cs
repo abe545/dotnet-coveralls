@@ -136,38 +136,38 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
         It should_set_pull_request = () => CoverallsData.ServicePullRequest.ShouldBe(SomePullRequestNumber);
     }
 
-    //[Subject(typeof(GitEnvironmentVariableGitDataResolver))]
-    //public class when_git_environment_variables_available : when_ci_environment_variables_available
-    //{
-    //    protected const string SomeAuthorName = "James T. Kirk";
-    //    protected const string SomeAuthorEmail = "james.kirk@starfleet.gov";
-    //    protected const string SomeCommitterName = "James";
-    //    protected const string SomeCommitterEmail = "kirk@starfleet.gov";
-    //    protected const string GitBranch = "earth";
-    //    protected const string SomeCommitId = "123456";
-    //    protected const string SomeCommitMessage = "Conquest is easy. Control is not.";
+    [Subject(typeof(GitEnvironmentVariableGitDataResolver))]
+    public class when_git_environment_variables_available : when_ci_environment_variables_available
+    {
+        protected const string SomeAuthorName = "James T. Kirk";
+        protected const string SomeAuthorEmail = "james.kirk@starfleet.gov";
+        protected const string SomeCommitterName = "James";
+        protected const string SomeCommitterEmail = "kirk@starfleet.gov";
+        protected const string GitBranch = "earth";
+        protected const string SomeCommitId = "123456";
+        protected const string SomeCommitMessage = "Conquest is easy. Control is not.";
 
-    //    Establish context = () =>
-    //    {
-    //        var environment = DiScope.Container.GetInstance<IEnvironmentVariables>();
+        Establish context = () =>
+        {
+            var environment = DiScope.Container.GetInstance<IEnvironmentVariables>();
 
-    //        environment.GetEnvironmentVariable(GitEnvironmentVariableGitDataResolver.Git.AUTHOR_NAME).Returns(SomeAuthorName);
-    //        environment.GetEnvironmentVariable(GitEnvironmentVariableGitDataResolver.Git.AUTHOR_EMAIL).Returns(SomeAuthorEmail);
-    //        environment.GetEnvironmentVariable(GitEnvironmentVariableGitDataResolver.Git.COMMITTER_NAME).Returns(SomeCommitterName);
-    //        environment.GetEnvironmentVariable(GitEnvironmentVariableGitDataResolver.Git.COMMITTER_EMAIL).Returns(SomeCommitterEmail);
-    //        environment.GetEnvironmentVariable(GitEnvironmentVariableGitDataResolver.Git.BRANCH).Returns(GitBranch);
-    //        environment.GetEnvironmentVariable(GitEnvironmentVariableGitDataResolver.Git.ID).Returns(SomeCommitId);
-    //        environment.GetEnvironmentVariable(GitEnvironmentVariableGitDataResolver.Git.MESSAGE).Returns(SomeCommitMessage);
-    //    };
+            environment.GetEnvironmentVariable(GitEnvironmentVariableGitDataResolver.Git.AUTHOR_NAME).Returns(SomeAuthorName);
+            environment.GetEnvironmentVariable(GitEnvironmentVariableGitDataResolver.Git.AUTHOR_EMAIL).Returns(SomeAuthorEmail);
+            environment.GetEnvironmentVariable(GitEnvironmentVariableGitDataResolver.Git.COMMITTER_NAME).Returns(SomeCommitterName);
+            environment.GetEnvironmentVariable(GitEnvironmentVariableGitDataResolver.Git.COMMITTER_EMAIL).Returns(SomeCommitterEmail);
+            environment.GetEnvironmentVariable(GitEnvironmentVariableGitDataResolver.Git.BRANCH).Returns(GitBranch);
+            environment.GetEnvironmentVariable(GitEnvironmentVariableGitDataResolver.Git.ID).Returns(SomeCommitId);
+            environment.GetEnvironmentVariable(GitEnvironmentVariableGitDataResolver.Git.MESSAGE).Returns(SomeCommitMessage);
+        };
 
-    //    It should_set_commit_id = () => CoverallsData.Git.Head.Id.ShouldBe(SomeCommitId);
-    //    It should_set_author_name = () => CoverallsData.Git.Head.AuthorName.ShouldBe(SomeAuthorName);
-    //    It should_set_author_email = () => CoverallsData.Git.Head.AuthorEmail.ShouldBe(SomeAuthorEmail);
-    //    It should_set_committer_name = () => CoverallsData.Git.Head.CommitterName.ShouldBe(SomeCommitterName);
-    //    It should_set_committer_email = () => CoverallsData.Git.Head.CommitterEmail.ShouldBe(SomeCommitterEmail);
-    //    It should_set_commit_message = () => CoverallsData.Git.Head.Message.ShouldBe(SomeCommitMessage);
-    //    It should_not_set_pr = () => CoverallsData.ServicePullRequest.ShouldBeNull();
-    //}
+        It should_set_commit_id = () => CoverallsData.Git.Head.Id.ShouldBe(SomeCommitId);
+        It should_set_author_name = () => CoverallsData.Git.Head.AuthorName.ShouldBe(SomeAuthorName);
+        It should_set_author_email = () => CoverallsData.Git.Head.AuthorEmail.ShouldBe(SomeAuthorEmail);
+        It should_set_committer_name = () => CoverallsData.Git.Head.CommitterName.ShouldBe(SomeCommitterName);
+        It should_set_committer_email = () => CoverallsData.Git.Head.CommitterEmail.ShouldBe(SomeCommitterEmail);
+        It should_set_commit_message = () => CoverallsData.Git.Head.Message.ShouldBe(SomeCommitMessage);
+        It should_not_set_pr = () => CoverallsData.ServicePullRequest.ShouldBeNull();
+    }
 
     [Subject(typeof(AppVeyorProvider))]
     public class when_appveyor_available : when_ci_environment_variables_available
