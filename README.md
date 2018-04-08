@@ -1,4 +1,4 @@
-daotnet-coveralls
+dotnet-coveralls
 =============
 [![Build status](https://ci.appveyor.com/api/projects/status/up29r5k4ca0900q1/branch/master?svg=true)](https://ci.appveyor.com/project/abe545/dotnet-coveralls/branch/master) [![Coverage Status](https://coveralls.io/repos/github/abe545/dotnet-coveralls/badge.svg?branch=master)](https://coveralls.io/github/abe545/dotnet-coveralls?branch=master)
 
