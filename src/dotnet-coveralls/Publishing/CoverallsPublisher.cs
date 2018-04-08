@@ -51,6 +51,7 @@ namespace Dotnet.Coveralls.Publishing
             {
                 data.RepoToken = "***";
                 await fileWriter.WriteCoverageOutput(SerializeCoverallsData());
+                logger.LogDebug(SerializeCoverallsData());
             }
             else
             {
@@ -58,9 +59,14 @@ namespace Dotnet.Coveralls.Publishing
                 {
                     throw new PublishCoverallsException("No coveralls token specified. Either pass it with --repo-token or set it in the Environment Variable 'COVERALLS_REPO_TOKEN'.");
                 }
-                await UploadCoverage();
+
+                var token = data.RepoToken;
                 data.RepoToken = "***";
-                logger.LogInformation(SerializeCoverallsData());
+                logger.LogDebug("Uploading to coveralls");
+                logger.LogDebug(SerializeCoverallsData());
+                data.RepoToken = token;
+
+                await UploadCoverage();
             }
 
             return 0;
