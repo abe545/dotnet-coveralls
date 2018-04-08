@@ -7,10 +7,11 @@
     <RootNamespace>Dotnet.Coveralls.Tests</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="coverlet.msbuild" Version="1.0.1" />
+    <PackageReference Include="Appveyor.TestLogger" Version="2.0.0" />
+    <PackageReference Include="coverlet.msbuild" Version="1.0.2" />
     <PackageReference Include="Machine.Specifications" Version="0.12.0" />
     <PackageReference Include="Machine.Specifications.Runner.VisualStudio" Version="2.6.1" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.6.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.0" />
     <PackageReference Include="NSubstitute" Version="3.1.0" />
     <PackageReference Include="Shouldly" Version="3.0.0" />
     <PackageReference Include="System.IO.Abstractions.TestingHelpers" Version="2.1.0.178" />
