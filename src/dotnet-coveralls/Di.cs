@@ -39,7 +39,7 @@ namespace Dotnet.Coveralls
             container.RegisterCollection<ICoverageParser>(new[] { typeof(Di).Assembly });
             container.RegisterCollection<IGitDataResolver>(new[] 
             {
-                typeof(CommandLineGitDataResolver),
+                typeof(CommandLineProvider),
                 typeof(AppVeyorProvider),
                 typeof(GitEnvironmentVariableGitDataResolver),
                 typeof(GitProcessGitDataResolver),

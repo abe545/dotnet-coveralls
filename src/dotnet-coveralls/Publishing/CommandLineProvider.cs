@@ -1,10 +1,11 @@
 ﻿using System.Threading.Tasks;
 using Dotnet.Coveralls.CommandLine;
 using Dotnet.Coveralls.Data;
+using Dotnet.Coveralls.Git;
 
 namespace Dotnet.Coveralls.Publishing
 {
-    public class CommandLineProvider : ICoverallsDataProvider
+    public class CommandLineProvider : ICoverallsDataProvider, IGitDataResolver
     {
         private readonly CoverallsOptions options;
 
@@ -27,5 +28,20 @@ namespace Dotnet.Coveralls.Publishing
             ServiceBuildUrl = options.BuildUrl,
             Parallel = options.Parallel ? (bool?)true : null,
         });
+
+        public Task<GitData> CreateGitData() => Task.FromResult(
+            new GitData
+            {
+                Head = new GitHead
+                {
+                    Id = options.CommitId,
+                    AuthorName = options.CommitAuthor,
+                    AuthorEmail = options.CommitEmail,
+                    CommitterName = options.CommitAuthor,
+                    CommitterEmail = options.CommitEmail,
+                    Message = options.CommitMessage
+                },
+                Branch = options.CommitBranch,
+            });
     }
 }
