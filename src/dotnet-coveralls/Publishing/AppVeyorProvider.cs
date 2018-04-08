@@ -22,6 +22,7 @@ namespace Dotnet.Coveralls.Git
             public const string COMMIT_BRANCH = "APPVEYOR_REPO_BRANCH";
             public const string JOB_ID = "APPVEYOR_JOB_ID";
             public const string BUILD_VERSION = "APPVEYOR_BUILD_VERSION";
+            public const string BUILD_NUMBER = "APPVEYOR_BUILD_NUMBER";
             public const string PR_NUMBER = "APPVEYOR_PULL_REQUEST_NUMBER";
         }
 
@@ -50,7 +51,7 @@ namespace Dotnet.Coveralls.Git
             ServiceBranch = variables.GetEnvironmentVariable(AppVeyor.COMMIT_BRANCH),
             ServiceName = nameof(AppVeyor).ToLower(),
             ServiceJobId = variables.GetEnvironmentVariable(AppVeyor.JOB_ID),
-            ServiceNumber = variables.GetEnvironmentVariable(AppVeyor.BUILD_VERSION),
+            ServiceNumber = variables.GetEnvironmentVariable(AppVeyor.BUILD_NUMBER),
             ServicePullRequest = variables.GetEnvironmentVariable(AppVeyor.PR_NUMBER),
             ServiceBuildUrl = $"https://ci.appveyor.com/project/{variables.GetEnvironmentVariable(AppVeyor.REPO_NAME)}/build/{variables.GetEnvironmentVariable(AppVeyor.BUILD_VERSION)}",
         });
