@@ -41,7 +41,6 @@ namespace Dotnet.Coveralls.Git
                     CommitterEmail = variables.GetEnvironmentVariable(AppVeyor.COMMIT_EMAIL),
                     Message = variables.GetEnvironmentVariable(AppVeyor.COMMIT_MESSAGE)
                 },
-                Branch = variables.GetEnvironmentVariable(AppVeyor.COMMIT_BRANCH),
             };
 
         public Task<CoverallsData> ProvideCoverallsData() => Task.FromResult(new CoverallsData

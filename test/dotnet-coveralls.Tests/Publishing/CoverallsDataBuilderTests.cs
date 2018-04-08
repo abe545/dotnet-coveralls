@@ -205,7 +205,6 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
         It should_set_committer_name = () => CoverallsData.Git.Head.CommitterName.ShouldBe(SomeCommitAuthor);
         It should_set_committer_email = () => CoverallsData.Git.Head.CommitterEmail.ShouldBe(SomeCommitEmail);
         It should_set_commit_message = () => CoverallsData.Git.Head.Message.ShouldBe(SomeCommitMessage);
-        It should_set_git_branch = () => CoverallsData.Git.Branch.ShouldBe(AppVeyorBranch);
         It should_not_set_pr = () => CoverallsData.ServicePullRequest.ShouldBeNull();
     }
 
@@ -222,8 +221,6 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
         };
 
         It should_set_pull_request = () => CoverallsData.ServicePullRequest.ShouldBe(SomePullRequestNumber);
-        It should_set_service_branch = () => CoverallsData.ServiceBranch.ShouldBe(AppVeyorBranch);
-        It should_set_git_branch = () => CoverallsData.Git.Branch.ShouldBe(AppVeyorBranch);
     }
 
     [Subject(typeof(GitProcessGitDataResolver))]
