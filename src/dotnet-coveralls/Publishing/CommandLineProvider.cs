@@ -25,7 +25,7 @@ namespace Dotnet.Coveralls.Publishing
             CommitSha = options.CommitId,
             ServiceBranch = options.CommitBranch,
             ServiceBuildUrl = options.BuildUrl,
-            Parallel = options.Parallel,
+            Parallel = options.Parallel ? (bool?)true : null,
         });
     }
 }
