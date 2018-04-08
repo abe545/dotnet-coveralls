@@ -200,27 +200,32 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
         It should_set_service_job_id = () => CoverallsData.ServiceJobId.ShouldBe(SomeJobId);
         It should_set_service_number = () => CoverallsData.ServiceNumber.ShouldBe(SomeBuildVersion);
         It should_set_service_build_url = () => CoverallsData.ServiceBuildUrl.ShouldBe($"https://ci.appveyor.com/project/{SomeRepoName}/build/{SomeBuildVersion}");
+        It should_set_service_branch = () => CoverallsData.ServiceBranch.ShouldBe(AppVeyorBranch);
         It should_set_commit_sha = () => CoverallsData.CommitSha.ShouldBe(SomeCommitId);
         It should_set_committer_name = () => CoverallsData.Git.Head.CommitterName.ShouldBe(SomeCommitAuthor);
         It should_set_committer_email = () => CoverallsData.Git.Head.CommitterEmail.ShouldBe(SomeCommitEmail);
         It should_set_commit_message = () => CoverallsData.Git.Head.Message.ShouldBe(SomeCommitMessage);
+        It should_set_git_branch = () => CoverallsData.Git.Branch.ShouldBe(AppVeyorBranch);
         It should_not_set_pr = () => CoverallsData.ServicePullRequest.ShouldBeNull();
     }
 
     [Subject(typeof(AppVeyorProvider))]
     public class when_appveyor_available_and_is_pr : when_appveyor_available
     {
-        protected const string SomePullRequestCommitId = "09871a";
         protected const string SomePullRequestNumber = "18";
+        protected const string SomePullRequestBranch = "number-81";
 
         Establish context = () =>
         {
             var environment = DiScope.Container.GetInstance<IEnvironmentVariables>();
 
             environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.PR_NUMBER).Returns(SomePullRequestNumber);
+            environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.PR_BRANCH).Returns(SomePullRequestBranch);
         };
 
         It should_set_pull_request = () => CoverallsData.ServicePullRequest.ShouldBe(SomePullRequestNumber);
+        It should_set_service_branch = () => CoverallsData.ServiceBranch.ShouldBe(AppVeyorBranch);
+        It should_set_git_branch = () => CoverallsData.Git.Branch.ShouldBe(SomePullRequestBranch);
     }
 
     [Subject(typeof(GitProcessGitDataResolver))]

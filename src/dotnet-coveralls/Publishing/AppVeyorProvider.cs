@@ -23,6 +23,7 @@ namespace Dotnet.Coveralls.Git
             public const string JOB_ID = "APPVEYOR_JOB_ID";
             public const string BUILD_VERSION = "APPVEYOR_BUILD_VERSION";
             public const string PR_NUMBER = "APPVEYOR_PULL_REQUEST_NUMBER";
+            public const string PR_BRANCH = "APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH";
         }
 
         public AppVeyorProvider(IEnvironmentVariables variables)
@@ -40,7 +41,8 @@ namespace Dotnet.Coveralls.Git
                     CommitterName = variables.GetEnvironmentVariable(AppVeyor.COMMIT_AUTHOR),
                     CommitterEmail = variables.GetEnvironmentVariable(AppVeyor.COMMIT_EMAIL),
                     Message = variables.GetEnvironmentVariable(AppVeyor.COMMIT_MESSAGE)
-                }
+                },
+                Branch = variables.GetEnvironmentVariable(AppVeyor.PR_BRANCH).NullIfEmpty() ?? variables.GetEnvironmentVariable(AppVeyor.COMMIT_BRANCH),
             };
 
         public Task<CoverallsData> ProvideCoverallsData() => Task.FromResult(new CoverallsData
