@@ -113,6 +113,20 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
     }
 
     [Subject(typeof(EnvironmentVariablesProvider))]
+    public class when_ci_environment_variables_and_coveralls_service_name_available : Spec
+    {
+        protected const string SomeCoverallsServiceName = "Star Trek";
+
+        protected static CoverallsData CoverallsData;
+
+        Establish context = () => DiScope.Container.GetInstance<IEnvironmentVariables>().GetEnvironmentVariable(EnvironmentVariablesProvider.CI.SERVICE_NAME).Returns(SomeCoverallsServiceName);
+
+        Because of = () => CoverallsData = DiScope.Container.GetInstance<ICoverallsDataBuilder>().ProvideCoverallsData().Result;
+
+        It should_set_service_name = () => CoverallsData.ServiceName.ShouldBe(SomeCoverallsServiceName);
+    }
+
+    [Subject(typeof(EnvironmentVariablesProvider))]
     public class when_parsing_pr_and_ci_environment_variables_available : when_ci_environment_variables_available
     {
         protected static string SomePullRequestNumber = "17";

@@ -12,6 +12,7 @@ namespace Dotnet.Coveralls.Publishing
         public static class CI
         {
             public const string REPO_TOKEN = "COVERALLS_REPO_TOKEN";
+            public const string SERVICE_NAME = "COVERALLS_SERVICE_NAME";
             public const string BRANCH = "CI_BRANCH";            
             public const string BUILD_NUMBER = "CI_BUILD_NUMBER";
             public const string BUILD_URL = "CI_BUILD_URL";
@@ -35,7 +36,7 @@ namespace Dotnet.Coveralls.Publishing
         {
             RepoToken = environmentVariables.GetEnvironmentVariable(CI.REPO_TOKEN),
             ServiceBuildUrl = environmentVariables.GetEnvironmentVariable(CI.BUILD_URL),
-            ServiceName = environmentVariables.GetEnvironmentVariable(CI.NAME),
+            ServiceName = environmentVariables.GetEnvironmentVariable(CI.SERVICE_NAME).NullIfEmpty() ?? environmentVariables.GetEnvironmentVariable(CI.NAME),
             ServiceNumber = environmentVariables.GetEnvironmentVariable(CI.BUILD_NUMBER),
             ServicePullRequest = environmentVariables.GetEnvironmentVariable(CI.PULL_REQUEST),
         });
