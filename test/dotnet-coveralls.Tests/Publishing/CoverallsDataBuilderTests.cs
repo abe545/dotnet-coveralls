@@ -212,15 +212,19 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
     public class when_appveyor_available_and_is_pr : when_appveyor_available
     {
         protected const string SomePullRequestNumber = "18";
+        protected const string SomePullRequestCommit = "13adb14";
 
         Establish context = () =>
         {
             var environment = DiScope.Container.GetInstance<IEnvironmentVariables>();
 
             environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.PR_NUMBER).Returns(SomePullRequestNumber);
+            environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.PR_COMMIT_ID).Returns(SomePullRequestCommit);
         };
 
         It should_set_pull_request = () => CoverallsData.ServicePullRequest.ShouldBe(SomePullRequestNumber);
+        It should_set_commit_sha = () => CoverallsData.CommitSha.ShouldBe(SomePullRequestCommit);
+        It should_set_git_commit = () => CoverallsData.Git.Head.Id.ShouldBe(SomePullRequestCommit);
     }
 
     [Subject(typeof(GitProcessGitDataResolver))]
