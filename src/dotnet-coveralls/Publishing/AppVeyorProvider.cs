@@ -4,6 +4,7 @@ using Dotnet.Coveralls.Publishing;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace Dotnet.Coveralls.Git
 {
@@ -25,9 +26,20 @@ namespace Dotnet.Coveralls.Git
             public const string PR_NUMBER = "APPVEYOR_PULL_REQUEST_NUMBER";
         }
 
-        public AppVeyorProvider(IEnvironmentVariables variables)
+        public AppVeyorProvider(IEnvironmentVariables variables, ILogger logger)
         {
             this.variables = variables;
+
+            var vars = System.Environment
+                .GetEnvironmentVariables()
+                .Keys
+                .Cast<string>()
+                .Where(k => k.StartsWith(nameof(AppVeyor), System.StringComparison.InvariantCultureIgnoreCase));
+
+            foreach (var v in vars)
+            {
+                logger.LogDebug($"{v}: {variables.GetEnvironmentVariable(v)}");
+            }
         }
 
         public bool CanProvideData => bool.TryParse(variables.GetEnvironmentVariable(nameof(AppVeyor).ToUpper()), out var value) && value;
