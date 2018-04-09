@@ -7,11 +7,11 @@ namespace Dotnet.Coveralls.Io
 {
     public class ProcessExecutor : IProcessExecutor
     {
-        private readonly ILogger<ProcessExecutor> Logger;
+        private readonly ILogger logger;
 
-        public ProcessExecutor(ILoggerFactory loggerFactory)
+        public ProcessExecutor(ILogger logger)
         {
-            Logger = loggerFactory.CreateLogger<ProcessExecutor>();
+            this.logger = logger;
         }
 
         public async Task<(string StandardOut, string StandardErr, int ReturnCode)> Execute(ProcessStartInfo processStartInfo)
@@ -23,18 +23,25 @@ namespace Dotnet.Coveralls.Io
             var stdOut = new StringBuilder();
             var stdErr = new StringBuilder();
 
+            logger.LogDebug($"{processStartInfo.FileName} {processStartInfo.Arguments}");
             using (var process = Process.Start(processStartInfo))
             {
                 process.OutputDataReceived += (_, e) =>
                 {
                     stdOut.AppendLine(e.Data);
-                    Logger.LogDebug(e.Data);
+                    if (!string.IsNullOrWhiteSpace(e.Data))
+                    {
+                        logger.LogDebug(e.Data);
+                    }
                 };
 
                 process.ErrorDataReceived += (_, e) =>
                 {
                     stdErr.AppendLine(e.Data);
-                    Logger.LogDebug(e.Data);
+                    if (!string.IsNullOrWhiteSpace(e.Data))
+                    {
+                        logger.LogWarning(e.Data);
+                    }
                 };
 
                 process.BeginOutputReadLine();

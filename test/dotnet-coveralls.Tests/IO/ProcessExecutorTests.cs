@@ -27,7 +27,7 @@ namespace Dotnet.Coveralls.Tests.IO.ProcessExecutorTests
 
     public class with_process_executor
     {
-        Establish context = () => Subject = new ProcessExecutor(new LoggerFactory());
+        Establish context = () => Subject = new ProcessExecutor(new LoggerFactory().CreateLogger("test"));
 
         Because of = () => (StandardOut, StandardError, ExitCode) = Subject.Execute(ProcessStartInfo).Result;
 
