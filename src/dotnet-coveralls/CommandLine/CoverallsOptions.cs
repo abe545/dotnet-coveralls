@@ -80,6 +80,9 @@ namespace Dotnet.Coveralls.CommandLine
         [NamedArgument("verbose", Action = ParseAction.StoreTrue, Description = "When set, will display additional log information")]
         public bool Verbose { get; set; }
 
+        [NamedArgument("run-at", Description = "The time the job was run at. If not set, will pass UtcNow.")]
+        public string RunAt { get; set; }
+
         public static string Usage => new AutomaticHelpGenerator<CoverallsOptions>().GetHelp(new CliParser<CoverallsOptions>(new CoverallsOptions()).Config);
         public static CoverallsOptions Parse(string[] args)
         {

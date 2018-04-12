@@ -27,6 +27,7 @@ namespace Dotnet.Coveralls.Publishing
             ServiceBranch = options.CommitBranch,
             ServiceBuildUrl = options.BuildUrl,
             Parallel = options.Parallel ? (bool?)true : null,
+            RunAt = options.RunAt,
         });
 
         public Task<GitData> CreateGitData() => Task.FromResult(

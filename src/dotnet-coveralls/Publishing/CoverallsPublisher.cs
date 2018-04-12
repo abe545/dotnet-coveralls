@@ -22,7 +22,7 @@ namespace Dotnet.Coveralls.Publishing
         private readonly IOutputFileWriter fileWriter;
         private readonly IFileProvider fileProvider;
         private readonly IEnvironmentVariables environmentVariables;
-        private readonly ILogger<CoverallsPublisher> logger;
+        private readonly ILogger logger;
         private const string CoverallsEndpoint = "https://coveralls.io/api/v1/jobs";
 
         public CoverallsPublisher(
@@ -31,14 +31,14 @@ namespace Dotnet.Coveralls.Publishing
             IOutputFileWriter fileWriter, 
             IFileProvider fileProvider,
             IEnvironmentVariables environmentVariables,
-            ILoggerFactory loggerFactory)
+            ILogger logger)
         {
             this.options = options;
             this.coverallsDataBuilder = coverallsDataBuilder;
             this.fileWriter = fileWriter;
             this.fileProvider = fileProvider;
             this.environmentVariables = environmentVariables;
-            this.logger = loggerFactory.CreateLogger<CoverallsPublisher>();
+            this.logger = logger;
         }
 
         public async Task<int> Publish()

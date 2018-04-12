@@ -17,12 +17,12 @@ namespace Dotnet.Coveralls.Io
             CoverallsOptions options,
             IFileWriter fileWriter,
             IFileProvider fileProvider,
-            ILoggerFactory loggerFactory)
+            ILogger logger)
         {
             this.options = options;
             this.fileWriter = fileWriter;
             this.fileProvider = fileProvider;
-            this.logger = loggerFactory.CreateLogger<OutputFileWriter>();
+            this.logger = logger;
         }
 
         public async Task WriteCoverageOutput(string text)

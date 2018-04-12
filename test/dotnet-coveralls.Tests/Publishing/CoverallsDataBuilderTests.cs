@@ -28,6 +28,7 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
         protected static string SomePullRequestNumber = "42";
         protected const string SomeJobId = "42-42";
         protected const string SomeRepoName = "HGTTG";
+        protected static readonly DateTimeOffset SomeDateTimeOffset = new DateTimeOffset(2018, 4, 11, 9, 56, 32, TimeSpan.FromHours(4));
 
         protected static CoverallsData CoverallsData;
 
@@ -46,7 +47,8 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
                 "--commit-email", SomeAuthorEmail,
                 "--commit-message", SomeCommitMessage,
                 "--pr-id", SomePullRequestNumber,
-                "--build-url", SomeBuildUrl
+                "--build-url", SomeBuildUrl,
+                "--run-at", SomeDateTimeOffset.ToString("F")
             }, c =>
             {
                 c.RegisterCollection(typeof(ICoverageParser), Enumerable.Empty<Type>());
@@ -70,6 +72,7 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
         It should_set_committer_email = () => CoverallsData.Git.Head.CommitterEmail.ShouldBe(SomeAuthorEmail);
         It should_set_commit_message = () => CoverallsData.Git.Head.Message.ShouldBe(SomeCommitMessage);
         It should_set_pull_request = () => CoverallsData.ServicePullRequest.ShouldBe(SomePullRequestNumber);
+        It should_set_run_at = () => CoverallsData.RunAt.ShouldBe(SomeDateTimeOffset.ToString("F"));
     }
 
     [Subject(typeof(EnvironmentVariablesProvider))]
@@ -205,6 +208,7 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
         It should_set_committer_name = () => CoverallsData.Git.Head.CommitterName.ShouldBe(SomeCommitAuthor);
         It should_set_committer_email = () => CoverallsData.Git.Head.CommitterEmail.ShouldBe(SomeCommitEmail);
         It should_set_commit_message = () => CoverallsData.Git.Head.Message.ShouldBe(SomeCommitMessage);
+        It should_set_git_branch = () => CoverallsData.Git.Branch.ShouldBe(AppVeyorBranch);
         It should_not_set_pr = () => CoverallsData.ServicePullRequest.ShouldBeNull();
     }
 
@@ -212,15 +216,19 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
     public class when_appveyor_available_and_is_pr : when_appveyor_available
     {
         protected const string SomePullRequestNumber = "18";
+        protected const string SomePullRequestCommit = "13adb14";
 
         Establish context = () =>
         {
             var environment = DiScope.Container.GetInstance<IEnvironmentVariables>();
 
             environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.PR_NUMBER).Returns(SomePullRequestNumber);
+            environment.GetEnvironmentVariable(AppVeyorProvider.AppVeyor.PR_COMMIT_ID).Returns(SomePullRequestCommit);
         };
 
         It should_set_pull_request = () => CoverallsData.ServicePullRequest.ShouldBe(SomePullRequestNumber);
+        It should_set_commit_sha = () => CoverallsData.CommitSha.ShouldBe(SomePullRequestCommit);
+        It should_set_git_commit = () => CoverallsData.Git.Head.Id.ShouldBe(SomePullRequestCommit);
     }
 
     [Subject(typeof(GitProcessGitDataResolver))]
@@ -268,5 +276,28 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
                 new GitRemote { Name = "origin", Url = SomeRemoteOrigin }
             });
         };
+    }
+
+    [Subject(typeof(FallbackProvider))]
+    public class when_no_other_value_set : Spec
+    {
+        protected static CoverallsData CoverallsData;
+        protected static readonly DateTimeOffset SomeDateTimeOffset = new DateTimeOffset(2018, 4, 11, 9, 56, 32, TimeSpan.FromHours(4));
+
+        Establish context = () => Setup(new[] { "--lcov", "dummy" }, c =>
+        {
+
+            var dateTimeOffsetProvider = Substitute.For<IDateTimeOffsetProvider>();
+            dateTimeOffsetProvider.UtcNow.Returns(SomeDateTimeOffset);
+
+            c.RegisterCollection(typeof(ICoverageParser), Enumerable.Empty<Type>());
+            c.RegisterInstance(dateTimeOffsetProvider);
+            c.RegisterInstance(Substitute.For<IEnvironmentVariables>());
+        });
+
+        Because of = () => CoverallsData = DiScope.Container.GetInstance<ICoverallsDataBuilder>().ProvideCoverallsData().Result;
+
+        It should_set_service_name = () => CoverallsData.ServiceName.ShouldBe("dotnet-coveralls");
+        It should_set_run_at = () => CoverallsData.RunAt.ShouldBe(SomeDateTimeOffset.ToString("o"));
     }
 }
