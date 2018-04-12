@@ -292,6 +292,7 @@ namespace Dotnet.Coveralls.Tests.Publishing.CoverallsDataBuilder
 
             c.RegisterCollection(typeof(ICoverageParser), Enumerable.Empty<Type>());
             c.RegisterInstance(dateTimeOffsetProvider);
+            c.RegisterInstance(Substitute.For<IEnvironmentVariables>());
         });
 
         Because of = () => CoverallsData = DiScope.Container.GetInstance<ICoverallsDataBuilder>().ProvideCoverallsData().Result;
