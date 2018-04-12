@@ -36,6 +36,7 @@ namespace Dotnet.Coveralls.Publishing
                     ServiceName = accum.ServiceName.NullIfEmpty() ?? toAdd.ServiceName.NullIfEmpty(),
                     ServiceNumber = accum.ServiceNumber.NullIfEmpty() ?? toAdd.ServiceNumber.NullIfEmpty(),
                     ServiceBuildUrl = accum.ServiceBuildUrl.NullIfEmpty() ?? toAdd.ServiceBuildUrl.NullIfEmpty(),
+                    RunAt = accum.RunAt.NullIfEmpty() ?? toAdd.RunAt.NullIfEmpty(),
                 };
         }
     }
