@@ -12,7 +12,15 @@
     <Title>A .net cli tool to publish coverage data to coveralls.io</Title>
     <Authors>Abraham Heidebrecht</Authors>
     <PackageProjectUrl>https://github.com/abe545/dotnet-coveralls</PackageProjectUrl>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <PackageReference Include="clipr" Version="1.6.1" />
